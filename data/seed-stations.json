@@ -1,0 +1,1008 @@
+{
+  "stations": [
+    {
+      "id": "seed:cnr1-zhongguozhisheng",
+      "name": "CNR-1 中国之声",
+      "url": "https://lhttp.qtfm.cn/live/15318317/64k.mp3",
+      "logo": "",
+      "country": "China",
+      "countryCode": "CN",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "china"
+      ],
+      "codec": "MP3",
+      "bitrate": 64,
+      "frequency": null,
+      "homepage": "http://www.cnr.cn/",
+      "hls": false,
+      "votes": 10221,
+      "clicks": 232
+    },
+    {
+      "id": "seed:cnr2-jingjizhisheng",
+      "name": "CNR-2 经济之声",
+      "url": "http://ngcdn002.cnr.cn/live/jjzs/index.m3u8",
+      "logo": "",
+      "country": "China",
+      "countryCode": "CN",
+      "city": "",
+      "tags": [
+        "news",
+        "business",
+        "china"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "http://www.cnr.cn/",
+      "hls": true,
+      "votes": 8474,
+      "clicks": 102
+    },
+    {
+      "id": "seed:cnr3-yinyuezhisheng",
+      "name": "CNR-3 音乐之声",
+      "url": "https://ngcdn001.cnr.cn/live/yyzs/index.m3u8",
+      "logo": "https://cnvod.cnr.cn/audio2017/ondemand/img/1100/20191224/1577155745280.png",
+      "country": "China",
+      "countryCode": "CN",
+      "city": "",
+      "tags": [
+        "music",
+        "pop",
+        "china"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "http://www.cnr.cn/",
+      "hls": true,
+      "votes": 716,
+      "clicks": 61
+    },
+    {
+      "id": "seed:cri-905",
+      "name": "CRI 环球资讯广播",
+      "url": "https://sk.cri.cn/905.m3u8",
+      "logo": "https://newsradio.cri.cn/favicon.ico",
+      "country": "China",
+      "countryCode": "CN",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "china"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "https://newsradio.cri.cn/",
+      "hls": true,
+      "votes": 1851,
+      "clicks": 118
+    },
+    {
+      "id": "seed:ifeng-news",
+      "name": "凤凰卫视资讯台",
+      "url": "http://playtv-live.ifeng.com/live/06OLEEWQKN4_audio.m3u8",
+      "logo": "http://d.ifengimg.com/w250_h160_q90_webp/x0.ifengimg.com/ucms/2021_23/4F53E3FD6DBDAF0374F35223C9F6316706F6A08F_size23_w250_h160.jpg",
+      "country": "China",
+      "countryCode": "CN",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "china"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "https://www.ifeng.com/",
+      "hls": true,
+      "votes": 14840,
+      "clicks": 413
+    },
+    {
+      "id": "seed:bj-traffic-fm1039",
+      "name": "北京交通广播 FM103.9",
+      "url": "https://lhttp.qingting.fm/live/336/64k.mp3",
+      "logo": "http://pic.qingting.fm/2019/0227/20190227023249.png",
+      "country": "China",
+      "countryCode": "CN",
+      "city": "",
+      "tags": [
+        "traffic",
+        "news",
+        "china"
+      ],
+      "codec": "MP3",
+      "bitrate": 64,
+      "frequency": "FM 103.9",
+      "homepage": "https://www.rbc.cn/index.shtml",
+      "hls": false,
+      "votes": 661,
+      "clicks": 28
+    },
+    {
+      "id": "seed:bj-music-fm974",
+      "name": "北京音乐广播 FM97.4",
+      "url": "https://lhttp.qtfm.cn/live/332/64k.mp3",
+      "logo": "https://pic.qtfm.cn/2017/0424/20170424025444.jpeg",
+      "country": "China",
+      "countryCode": "CN",
+      "city": "",
+      "tags": [
+        "music",
+        "pop",
+        "china"
+      ],
+      "codec": "MP3",
+      "bitrate": 64,
+      "frequency": "FM 97.4",
+      "homepage": "https://www.rbc.cn/",
+      "hls": false,
+      "votes": 374,
+      "clicks": 13
+    },
+    {
+      "id": "seed:sh-donggan101-fm1017",
+      "name": "上海动感101 FM101.7",
+      "url": "https://lhttp-hw.qtfm.cn/live/274/64k.mp3",
+      "logo": "http://pic.qingting.fm/2014/0909/20140909123511693.jpg",
+      "country": "China",
+      "countryCode": "CN",
+      "city": "",
+      "tags": [
+        "music",
+        "pop",
+        "china"
+      ],
+      "codec": "MP3",
+      "bitrate": 64,
+      "frequency": "FM 101.7",
+      "homepage": "https://www.smg.cn/review/index.html",
+      "hls": false,
+      "votes": 318,
+      "clicks": 18
+    },
+    {
+      "id": "seed:sh-classic-fm947",
+      "name": "上海经典音乐广播 FM94.7",
+      "url": "https://lhttp-hw.qtfm.cn/live/267/64k.mp3",
+      "logo": "http://pic.qingting.fm/sso/48/1641437907698_k0NNOUP54.jpeg",
+      "country": "China",
+      "countryCode": "CN",
+      "city": "",
+      "tags": [
+        "classical",
+        "music",
+        "china"
+      ],
+      "codec": "MP3",
+      "bitrate": 64,
+      "frequency": "FM 94.7",
+      "homepage": "https://www.smg.cn/review/index.html",
+      "hls": false,
+      "votes": 327,
+      "clicks": 16
+    },
+    {
+      "id": "seed:rthk-radio1",
+      "name": "香港電台第一台",
+      "url": "https://rthkradio1-live.akamaized.net/hls/live/2035313/radio1/master.m3u8",
+      "logo": "",
+      "country": "Hong Kong",
+      "countryCode": "HK",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "hong kong"
+      ],
+      "codec": "AAC",
+      "bitrate": 70,
+      "frequency": null,
+      "homepage": "http://www.rthk.org.hk/",
+      "hls": true,
+      "votes": 309,
+      "clicks": 13
+    },
+    {
+      "id": "seed:rthk-radio2",
+      "name": "香港電台第二台",
+      "url": "https://rthkradio2-live.akamaized.net/hls/live/2040078/radio2/index_64_a.m3u8",
+      "logo": "",
+      "country": "Hong Kong",
+      "countryCode": "HK",
+      "city": "",
+      "tags": [
+        "music",
+        "talk",
+        "hong kong"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "https://www.rthk.hk/",
+      "hls": true,
+      "votes": 108,
+      "clicks": 65
+    },
+    {
+      "id": "seed:rthk-radio3",
+      "name": "香港電台第三台",
+      "url": "https://rthkradio3-live.akamaized.net/hls/live/2040079/radio3/master.m3u8",
+      "logo": "",
+      "country": "Hong Kong",
+      "countryCode": "HK",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "hong kong"
+      ],
+      "codec": "AAC",
+      "bitrate": 70,
+      "frequency": null,
+      "homepage": "https://www.rthk.hk/radio",
+      "hls": true,
+      "votes": 27,
+      "clicks": 2
+    },
+    {
+      "id": "seed:rthk-radio4",
+      "name": "香港電台第四台",
+      "url": "https://rthkradio4-live.akamaized.net/hls/live/2040080/radio4/master.m3u8",
+      "logo": "",
+      "country": "Hong Kong",
+      "countryCode": "HK",
+      "city": "",
+      "tags": [
+        "classical",
+        "music",
+        "hong kong"
+      ],
+      "codec": "AAC",
+      "bitrate": 70,
+      "frequency": null,
+      "homepage": "http://www.rthk.org.hk/",
+      "hls": true,
+      "votes": 401,
+      "clicks": 4
+    },
+    {
+      "id": "seed:metro-news",
+      "name": "新城知訊台",
+      "url": "https://1603884249.rsc.cdn77.org/1603884249/index.m3u8",
+      "logo": "https://sao.fm/wp-content/uploads/20220401142443934-150x150.jpeg",
+      "country": "Hong Kong",
+      "countryCode": "HK",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "hong kong"
+      ],
+      "codec": "AAC",
+      "bitrate": 100,
+      "frequency": null,
+      "homepage": "https://www.metroradio.com.hk/superhome/",
+      "hls": true,
+      "votes": 257,
+      "clicks": 54
+    },
+    {
+      "id": "seed:bcc-news",
+      "name": "中廣新聞網",
+      "url": "https://n03.rcs.revma.com/78fm9wyy2tzuv",
+      "logo": "https://www.bcc.com.tw/images/lg1.jpg",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "taiwan"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "https://www.bcc.com.tw/",
+      "hls": false,
+      "votes": 515,
+      "clicks": 152
+    },
+    {
+      "id": "seed:bcc-pop",
+      "name": "中廣流行網",
+      "url": "https://n03.rcs.revma.com/aw9uqyxy2tzuv",
+      "logo": "https://www.bcc.com.tw/images/lg2.jpg",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "city": "",
+      "tags": [
+        "music",
+        "pop",
+        "taiwan"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "https://www.bcc.com.tw/",
+      "hls": false,
+      "votes": 206,
+      "clicks": 48
+    },
+    {
+      "id": "seed:ufo-radio",
+      "name": "飛碟電台",
+      "url": "https://n10.rcs.revma.com/em90w4aeewzuv",
+      "logo": "https://myradio.com.tw/_next/image?url=https://images.myradio.com.tw/images/A0501.jpg&w=256&q=75",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "taiwan"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "https://www.fm995.com.tw/index.html",
+      "hls": false,
+      "votes": 130,
+      "clicks": 47
+    },
+    {
+      "id": "seed:icrt",
+      "name": "Radio ICRT",
+      "url": "https://n27a-eu.rcs.revma.com/nkdfurztxp3vv",
+      "logo": "https://cdn-radiotime-logos.tunein.com/s7198q.png",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "city": "",
+      "tags": [
+        "pop",
+        "news",
+        "taiwan"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "https://www.icrt.com.tw/",
+      "hls": false,
+      "votes": 65,
+      "clicks": 13
+    },
+    {
+      "id": "seed:taipei-radio",
+      "name": "臺北電台",
+      "url": "https://stream.ginnet.cloud/live0130lo-yfyo/_definst_/fm/playlist.m3u8",
+      "logo": "https://liveonlineradio.net/wp-content/uploads/2021/09/radio-taipei-93.1-fm-220x108.jpg",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "city": "",
+      "tags": [
+        "music",
+        "pop",
+        "taiwan"
+      ],
+      "codec": "AAC",
+      "bitrate": 322,
+      "frequency": null,
+      "homepage": "http://www.radio.gov.taipei/",
+      "hls": true,
+      "votes": 4336,
+      "clicks": 110
+    },
+    {
+      "id": "seed:tw-classical-fm977",
+      "name": "古典音樂台 FM 97.7",
+      "url": "http://59.120.88.155:8000/live.mp3",
+      "logo": "",
+      "country": "Taiwan",
+      "countryCode": "TW",
+      "city": "",
+      "tags": [
+        "classical",
+        "music",
+        "taiwan"
+      ],
+      "codec": "MP3",
+      "bitrate": 192,
+      "frequency": "FM 97.7",
+      "homepage": "http://www.family977.com.tw/index.php",
+      "hls": false,
+      "votes": 3665,
+      "clicks": 33
+    },
+    {
+      "id": "seed:cnn",
+      "name": "CNN",
+      "url": "https://tunein.cdnstream1.com/2868_96.mp3",
+      "logo": "https://www.cnn.com/media/sites/cnn/favicon.ico",
+      "country": "United States",
+      "countryCode": "US",
+      "city": "",
+      "tags": [
+        "news",
+        "talk"
+      ],
+      "codec": "MP3",
+      "bitrate": 96,
+      "frequency": null,
+      "homepage": "https://www.cnn.com/",
+      "hls": false,
+      "votes": 13076,
+      "clicks": 406
+    },
+    {
+      "id": "seed:npr",
+      "name": "NPR",
+      "url": "http://npr-ice.streamguys1.com/live.mp3",
+      "logo": "https://static-assets.npr.org/static/images/favicon/favicon-96x96.png",
+      "country": "United States",
+      "countryCode": "US",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "public radio"
+      ],
+      "codec": "MP3",
+      "bitrate": 96,
+      "frequency": null,
+      "homepage": "https://www.npr.org/2016/04/05/472557877/npr-program-stream",
+      "hls": false,
+      "votes": 30529,
+      "clicks": 193
+    },
+    {
+      "id": "seed:adroit-jazz",
+      "name": "Adroit Jazz Underground",
+      "url": "https://icecast.walmradio.com:8443/jazz",
+      "logo": "https://icecast.walmradio.com:8443/jazz.jpg",
+      "country": "United States",
+      "countryCode": "US",
+      "city": "",
+      "tags": [
+        "jazz",
+        "smooth jazz"
+      ],
+      "codec": "MP3",
+      "bitrate": 320,
+      "frequency": null,
+      "homepage": "https://walmradio.com/jazz",
+      "hls": false,
+      "votes": 184892,
+      "clicks": 397
+    },
+    {
+      "id": "seed:frisky-radio",
+      "name": "Frisky Radio",
+      "url": "http://stream2.friskyradio.com/frisky_mp3_hi",
+      "logo": "https://s3.amazonaws.com/media.friskyradio.com/favicon.png",
+      "country": "United States",
+      "countryCode": "US",
+      "city": "",
+      "tags": [
+        "electronic",
+        "house",
+        "dance"
+      ],
+      "codec": "MP3",
+      "bitrate": 96,
+      "frequency": null,
+      "homepage": "https://www.friskyradio.com/",
+      "hls": false,
+      "votes": 54586,
+      "clicks": 67
+    },
+    {
+      "id": "seed:bbc-world-service",
+      "name": "BBC World Service",
+      "url": "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service",
+      "logo": "http://cdn-profiles.tunein.com/s24948/images/logoq.jpg?t=1",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "city": "",
+      "tags": [
+        "news",
+        "talk"
+      ],
+      "codec": "MP3",
+      "bitrate": 56,
+      "frequency": null,
+      "homepage": "https://www.bbc.co.uk/programmes/w172xzjgf6lxp7y",
+      "hls": false,
+      "votes": 167234,
+      "clicks": 889
+    },
+    {
+      "id": "seed:bbc-radio4",
+      "name": "BBC Radio 4",
+      "url": "http://as-hls-ww-live.akamaized.net/pool_55057080/live/ww/bbc_radio_fourfm/bbc_radio_fourfm.isml/bbc_radio_fourfm-audio%3d128000.norewind.m3u8",
+      "logo": "https://cdn-radiotime-logos.tunein.com/s25419q.png",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "city": "",
+      "tags": [
+        "news",
+        "talk",
+        "drama"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "https://www.bbc.co.uk/radio4",
+      "hls": true,
+      "votes": 6976,
+      "clicks": 355
+    },
+    {
+      "id": "seed:classic-fm-uk",
+      "name": "Classic FM UK",
+      "url": "http://ice-the.musicradio.com/ClassicFMMP3",
+      "logo": "http://www.classicfm.com/assets_v4r/classic/img/favicon-196x196.png",
+      "country": "United Kingdom",
+      "countryCode": "GB",
+      "city": "",
+      "tags": [
+        "classical",
+        "music"
+      ],
+      "codec": "MP3",
+      "bitrate": 128,
+      "frequency": null,
+      "homepage": "http://www.classicfm.com/",
+      "hls": false,
+      "votes": 58134,
+      "clicks": 249
+    },
+    {
+      "id": "seed:rtl-fr",
+      "name": "RTL",
+      "url": "https://live.m6radio.quortex.io/webM89Hc99XApzgfhXNX8ASN5/grouprtl/national/short/audio-64000/index.m3u8",
+      "logo": "",
+      "country": "France",
+      "countryCode": "FR",
+      "city": "",
+      "tags": [
+        "news",
+        "talk"
+      ],
+      "codec": "AAC",
+      "bitrate": 64,
+      "frequency": null,
+      "homepage": "https://www.rtl.fr/",
+      "hls": true,
+      "votes": 2937,
+      "clicks": 2591
+    },
+    {
+      "id": "seed:fip",
+      "name": "FIP",
+      "url": "http://radio-metadata.fr:8000/fip",
+      "logo": "",
+      "country": "France",
+      "countryCode": "FR",
+      "city": "",
+      "tags": [
+        "jazz",
+        "eclectic"
+      ],
+      "codec": "AAC",
+      "bitrate": 192,
+      "frequency": null,
+      "homepage": "https://www.radiofrance.fr/fip",
+      "hls": false,
+      "votes": 189,
+      "clicks": 38
+    },
+    {
+      "id": "seed:radio-classique",
+      "name": "Radio Classique",
+      "url": "https://str0.creacast.com/classique1",
+      "logo": "http://favicons.teamtailor-cdn.com/icon?size=80..120..200&url=https%3a%2f%2fwww.radioclassique.fr%2f",
+      "country": "France",
+      "countryCode": "FR",
+      "city": "",
+      "tags": [
+        "classical",
+        "music"
+      ],
+      "codec": "MP3",
+      "bitrate": 128,
+      "frequency": null,
+      "homepage": "https://www.radioclassique.fr/",
+      "hls": false,
+      "votes": 2066,
+      "clicks": 137
+    },
+    {
+      "id": "seed:skyrock",
+      "name": "Skyrock",
+      "url": "http://icecast.skyrock.net/s/natio_mp3_128k",
+      "logo": "",
+      "country": "France",
+      "countryCode": "FR",
+      "city": "",
+      "tags": [
+        "pop",
+        "rap",
+        "rock"
+      ],
+      "codec": "MP3",
+      "bitrate": 128,
+      "frequency": null,
+      "homepage": "https://skyrock.fm/",
+      "hls": false,
+      "votes": 55545,
+      "clicks": 389
+    },
+    {
+      "id": "seed:deutschlandfunk",
+      "name": "Deutschlandfunk",
+      "url": "https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3?aggregator=web",
+      "logo": "https://www.deutschlandfunk.de/static/img/deutschlandfunk/icons/apple-touch-icon-128x128.png",
+      "country": "Germany",
+      "countryCode": "DE",
+      "city": "",
+      "tags": [
+        "news",
+        "culture"
+      ],
+      "codec": "MP3",
+      "bitrate": 128,
+      "frequency": null,
+      "homepage": "https://www.deutschlandfunk.de/",
+      "hls": false,
+      "votes": 12006,
+      "clicks": 654
+    },
+    {
+      "id": "seed:mangoradio",
+      "name": "MANGORADIO",
+      "url": "https://mangoradio.stream.laut.fm/mangoradio",
+      "logo": "https://mangoradio.de/wp-content/uploads/cropped-Logo-192x192.webp",
+      "country": "Germany",
+      "countryCode": "DE",
+      "city": "",
+      "tags": [
+        "electronic",
+        "dance"
+      ],
+      "codec": "MP3",
+      "bitrate": 128,
+      "frequency": null,
+      "homepage": "https://mangoradio.de/",
+      "hls": false,
+      "votes": 830057,
+      "clicks": 750
+    },
+    {
+      "id": "seed:rock-antenne",
+      "name": "Rock Antenne",
+      "url": "http://mp3channels.webradio.rockantenne.de/rockantenne",
+      "logo": "http://www.rockantenne.de/logos/rock-antenne/apple-touch-icon.png",
+      "country": "Germany",
+      "countryCode": "DE",
+      "city": "",
+      "tags": [
+        "rock"
+      ],
+      "codec": "MP3",
+      "bitrate": 128,
+      "frequency": null,
+      "homepage": "http://www.rockantenne.de/",
+      "hls": false,
+      "votes": 26723,
+      "clicks": 177
+    },
+    {
+      "id": "seed:nhk-world-radio",
+      "name": "NHK WORLD RADIO",
+      "url": "https://nhkworld-radio.nhkworld.jp/hls/live/nhkworld-radio-media2/index.m3u8",
+      "logo": "",
+      "country": "Japan",
+      "countryCode": "JP",
+      "city": "",
+      "tags": [
+        "news",
+        "talk"
+      ],
+      "codec": "AAC",
+      "bitrate": 0,
+      "frequency": null,
+      "homepage": "https://www3.nhk.or.jp/nhkworld/",
+      "hls": true,
+      "votes": 65,
+      "clicks": 98
+    },
+    {
+      "id": "seed:shonan-beach-fm789",
+      "name": "Shonan Beach FM 78.9",
+      "url": "http://shonanbeachfm.out.airtime.pro:8000/shonanbeachfm_a",
+      "logo": "",
+      "country": "Japan",
+      "countryCode": "JP",
+      "city": "",
+      "tags": [
+        "jazz",
+        "community"
+      ],
+      "codec": "MP3",
+      "bitrate": 128,
+      "frequency": "FM 78.9",
+      "homepage": "https://www.beachfm.co.jp/",
+      "hls": false,
+      "votes": 269,
+      "clicks": 69
+    },
+    {
+      "id": "seed:ytn-radio",
+      "name": "YTN 라디오",
+      "url": "https://radiolive.ytn.co.kr/radio/_definst_/20211118_fmlive/playlist.m3u8",
+      "logo": "",
+      "country": "South Korea",
+      "countryCode": "KR",
+      "city": "",
+      "tags": [
+        "news",
+        "talk"
+      ],
+      "codec": "AAC",
+      "bitrate": 119,
+      "frequency": null,
+      "homepage": "https://www.ytn.co.kr/",
+      "hls": true,
+      "votes": 378,
+      "clicks": 45
+    },
+    {
+      "id": "seed:cbs-music-fm",
+      "name": "CBS 음악 FM",
+      "url": "https://m-aac.cbs.co.kr/cbs939/_definst_/cbs939.stream/playlist.m3u8",
+      "logo": "",
+      "country": "South Korea",
+      "countryCode": "KR",
+      "city": "",
+      "tags": [
+        "music",
+        "pop"
+      ],
+      "codec": "AAC",
+      "bitrate": 97,
+      "frequency": null,
+      "homepage": "",
+      "hls": true,
+      "votes": 567,
+      "clicks": 50
+    },
+    {
+      "id": "seed:vesti-fm",
+      "name": "Вести ФМ",
+      "url": "http://icecast.vgtrk.cdnvideo.ru/vestifm_mp3_192kbps",
+      "logo": "",
+      "country": "Russia",
+      "countryCode": "RU",
+      "city": "",
+      "tags": [
+        "news",
+        "talk"
+      ],
+      "codec": "MP3",
+      "bitrate": 192,
+      "frequency": null,
+      "homepage": "http://radiovesti.ru/",
+      "hls": false,
+      "votes": 55883,
+      "clicks": 113
+    },
+    {
+      "id": "seed:anon-fm",
+      "name": "Anon.FM",
+      "url": "https://icecast.anon.fm/radio",
+      "logo": "https://icecast.anon.fm/favicon.png",
+      "country": "Russia",
+      "countryCode": "RU",
+      "city": "",
+      "tags": [
+        "electronic",
+        "experimental"
+      ],
+      "codec": "MP3",
+      "bitrate": 192,
+      "frequency": null,
+      "homepage": "https://anon.radio.fm/",
+      "hls": false,
+      "votes": 28607,
+      "clicks": 699
+    },
+    {
+      "id": "seed:rai-radio1",
+      "name": "Rai Radio 1",
+      "url": "http://icestreaming.rai.it/1.mp3",
+      "logo": "https://www.rai.it/cropgd/560x292/dl/img/2019/01/07/1280x720_1546854278675_conferenza%20radio1.jpg",
+      "country": "Italy",
+      "countryCode": "IT",
+      "city": "",
+      "tags": [
+        "news",
+        "talk"
+      ],
+      "codec": "MP3",
+      "bitrate": 256,
+      "frequency": null,
+      "homepage": "http://www.radio1.rai.it",
+      "hls": false,
+      "votes": 42879,
+      "clicks": 268
+    },
+    {
+      "id": "seed:rai-radio3",
+      "name": "Rai Radio 3",
+      "url": "http://icestreaming.rai.it/3.mp3",
+      "logo": "https://www.raicom.rai.it/wp-content/uploads/2021/12/RADIO3-1024x1024.jpg",
+      "country": "Italy",
+      "countryCode": "IT",
+      "city": "",
+      "tags": [
+        "classical",
+        "culture"
+      ],
+      "codec": "MP3",
+      "bitrate": 320,
+      "frequency": null,
+      "homepage": "http://www.radio3.rai.it/",
+      "hls": false,
+      "votes": 23749,
+      "clicks": 139
+    },
+    {
+      "id": "seed:cadena-ser",
+      "name": "Cadena SER",
+      "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/CADENASER.mp3",
+      "logo": "https://cadenaser00.epimg.net/favicon.png",
+      "country": "Spain",
+      "countryCode": "ES",
+      "city": "",
+      "tags": [
+        "news",
+        "talk"
+      ],
+      "codec": "MP3",
+      "bitrate": 128,
+      "frequency": null,
+      "homepage": "http://play.cadenaser.com/",
+      "hls": false,
+      "votes": 30938,
+      "clicks": 414
+    },
+    {
+      "id": "seed:los40",
+      "name": "LOS 40",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/Los40.mp3",
+      "logo": "https://los40es00.epimg.net/iconos/v1.x/v1.0/touch-apple.png",
+      "country": "Spain",
+      "countryCode": "ES",
+      "city": "",
+      "tags": [
+        "pop",
+        "hits"
+      ],
+      "codec": "MP3",
+      "bitrate": 128,
+      "frequency": null,
+      "homepage": "https://los40.com/",
+      "hls": false,
+      "votes": 35199,
+      "clicks": 304
+    },
+    {
+      "id": "seed:cbc-radio1-toronto",
+      "name": "CBC Radio 1 Toronto",
+      "url": "https://cbcradiolive.akamaized.net/hls/live/2041036/ES_R1ETR/master.m3u8",
+      "logo": "",
+      "country": "Canada",
+      "countryCode": "CA",
+      "city": "",
+      "tags": [
+        "news",
+        "talk"
+      ],
+      "codec": "AAC",
+      "bitrate": 48,
+      "frequency": null,
+      "homepage": "https://www.cbc.ca/listen/live-radio",
+      "hls": true,
+      "votes": 5265,
+      "clicks": 33
+    },
+    {
+      "id": "seed:abc-jazz",
+      "name": "ABC Jazz",
+      "url": "https://mediaserviceslive.akamaized.net/hls/live/2038319/abcjazz/index.m3u8",
+      "logo": "",
+      "country": "Australia",
+      "countryCode": "AU",
+      "city": "",
+      "tags": [
+        "jazz"
+      ],
+      "codec": "AAC",
+      "bitrate": 252,
+      "frequency": null,
+      "homepage": "https://www.abc.net.au/jazz",
+      "hls": true,
+      "votes": 205,
+      "clicks": 31
+    },
+    {
+      "id": "seed:triple-j",
+      "name": "triple j",
+      "url": "https://mediaserviceslive.akamaized.net/hls/live/2038308/triplejnsw/master.m3u8",
+      "logo": "",
+      "country": "Australia",
+      "countryCode": "AU",
+      "city": "",
+      "tags": [
+        "rock",
+        "alternative",
+        "pop"
+      ],
+      "codec": "AAC",
+      "bitrate": 252,
+      "frequency": null,
+      "homepage": "https://triplej.net.au/",
+      "hls": true,
+      "votes": 164,
+      "clicks": 19
+    },
+    {
+      "id": "seed:bossa-jazz-brasil",
+      "name": "Bossa Jazz Brasil",
+      "url": "https://centova5.transmissaodigital.com:20104/live",
+      "logo": "https://bossajazzbrasil.com/wp-content/uploads/2020/12/cropped-bjs-app-180x180.png",
+      "country": "Brazil",
+      "countryCode": "BR",
+      "city": "",
+      "tags": [
+        "jazz",
+        "bossa nova"
+      ],
+      "codec": "AAC+",
+      "bitrate": 64,
+      "frequency": null,
+      "homepage": "https://bossajazzbrasil.com/",
+      "hls": false,
+      "votes": 9057,
+      "clicks": 77
+    },
+    {
+      "id": "seed:antena1-947",
+      "name": "Rádio Antena 1 94.7 FM",
+      "url": "https://antenaone.crossradio.com.br/stream/1;",
+      "logo": "https://img.radios.com.br/radio/lg/radio9505_1574106966.jpg",
+      "country": "Brazil",
+      "countryCode": "BR",
+      "city": "",
+      "tags": [
+        "pop",
+        "adult contemporary",
+        "brazil"
+      ],
+      "codec": "AAC+",
+      "bitrate": 96,
+      "frequency": "FM 94.7",
+      "homepage": "https://www.antena1.com.br/",
+      "hls": false,
+      "votes": 1067,
+      "clicks": 135
+    }
+  ]
+}

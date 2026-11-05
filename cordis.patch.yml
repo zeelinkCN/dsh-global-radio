@@ -1,0 +1,13 @@
+# 全球电台（Global Radio）：Web 面板 + 侧栏入口 + 侧栏迷你播放器
+#
+# Host 侧提供 Radio Browser 聚合、音频流代理（/stream）、HLS 播放列表/分片重写代理（/hls）、
+# 台标图片代理（/img）。Client 侧注册三个 slot：
+#   - main（key: global-radio）      整页电台浏览 / 全屏播放页
+#   - sidebar.panellist（id: global-radio, order: 40）侧栏入口图标
+#   - sidebar.footer.action（id: radio-mini, order: 20）后台播放时的迷你播放器
+#
+# 与网易云音乐的音频互斥由 client.js 的通用 media 仲裁完成（谁在播，另一个自动暂停），
+# 不需要修改网易云插件。
+- insert:
+    - id: global-radio
+      name: '@local/global-radio'

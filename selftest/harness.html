@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="zh-CN" data-active-panel="global-radio">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>global-radio client harness</title>
+  <style>
+    /* ------------------------------------------------------------------
+     * DSH 主题 token 的离线快照（light 默认，dark 走 prefers-color-scheme）
+     * 取值来自 Harness 主题定义：neutral-bluish 色阶 + 语义别名
+     * 注意：这是快照；真实 Harness token 随版本变化时需同步。
+     * ------------------------------------------------------------------ */
+    :root {
+      color-scheme: light;
+      --dsw-alias-bg-base: #ffffff;
+      --dsw-alias-bg-layer-1: #ffffff;
+      --dsw-alias-bg-layer-2: #ffffff;
+      --dsw-alias-bg-layer-3: #f9fafb;
+      --dsw-alias-bg-overlay: #ffffff;
+      --dsw-alias-bg-skeleton: rgba(0, 0, 0, .06);
+      --dsw-alias-bg-mask-drop: #272730b3;
+      --dsw-alias-label-primary: #0f1115;
+      --dsw-alias-label-secondary: #61666b;
+      --dsw-alias-label-tertiary: #81858c;
+      --dsw-alias-label-caption: #81858c;
+      --dsw-alias-label-primary-inverted: #353638;
+      --dsw-alias-border-l1: rgba(0, 0, 0, .04);
+      --dsw-alias-border-l2: rgba(0, 0, 0, .1);
+      --dsw-alias-border-l3: rgba(0, 0, 0, .16);
+      --dsw-alias-border-l4: rgba(0, 0, 0, .2);
+      --dsw-alias-brand-primary: #4d6bfe;
+      --dsw-alias-state-success-primary: #22c55e;
+      --dsw-alias-state-warn-primary: #f59e0b;
+      --dsw-alias-state-error-primary: #ec1313;
+      --dsw-alias-fill-tertiary: rgba(0, 0, 0, .08);
+      --dsw-alias-interactive-bg-hover: rgba(0, 0, 0, .05);
+      --dsw-alias-interactive-bg-hover-solid: #f1f3f5;
+      --dsw-alias-button-primary-fill: #4d6bfe;
+      --dsw-alias-button-primary-hover: #353638;
+      --dsw-specific-sidebar-fill: #f9fafb;
+      --dsw-specific-input-major: #ffffff;
+      --dsh-frame-top-clearance: 20px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --dsw-alias-bg-base: #151517;
+        --dsw-alias-bg-layer-1: #232324;
+        --dsw-alias-bg-layer-2: #2c2c2e;
+        --dsw-alias-bg-layer-3: #353638;
+        --dsw-alias-bg-overlay: #2c2c2e;
+        --dsw-alias-bg-skeleton: rgba(255, 255, 255, .08);
+        --dsw-alias-bg-mask-drop: #272730b3;
+        --dsw-alias-label-primary: #f9fafb;
+        --dsw-alias-label-secondary: #cfd3d6;
+        --dsw-alias-label-tertiary: #adb2b8;
+        --dsw-alias-label-caption: #81858c;
+        --dsw-alias-label-primary-inverted: #2c2c2e;
+        --dsw-alias-border-l1: rgba(255, 255, 255, .06);
+        --dsw-alias-border-l2: rgba(255, 255, 255, .12);
+        --dsw-alias-border-l3: rgba(255, 255, 255, .16);
+        --dsw-alias-border-l4: rgba(255, 255, 255, .2);
+        --dsw-alias-brand-primary: #4d6bfe;
+        --dsw-alias-state-success-primary: #22c55e;
+        --dsw-alias-state-warn-primary: #f59e0b;
+        --dsw-alias-state-error-primary: #f25a5a;
+        --dsw-alias-fill-tertiary: rgba(255, 255, 255, .08);
+        --dsw-alias-interactive-bg-hover: rgba(255, 255, 255, .08);
+        --dsw-alias-interactive-bg-hover-solid: #353638;
+        --dsw-alias-button-primary-fill: #4d6bfe;
+        --dsw-alias-button-primary-hover: #ebeef2;
+        --dsw-specific-sidebar-fill: #1b1b1c;
+        --dsw-specific-input-major: #232324;
+      }
+    }
+
+    html, body, #app { height: 100%; margin: 0; }
+    body {
+      background: var(--dsw-alias-bg-base);
+      color: var(--dsw-alias-label-primary);
+      font-family: -apple-system, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* 模拟 DSH：左侧栏（含 footer action 槽）+ 主区 + 面板内输入框。 */
+    #app { display: flex; height: 100%; overflow: hidden; }
+    #rail {
+      width: 56px; flex: none; box-sizing: border-box;
+      background: var(--dsw-specific-sidebar-fill);
+      border-right: 1px solid var(--dsw-alias-border-l1);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 40px 0 10px; gap: 8px;
+      transition: width 160ms ease;
+    }
+    #rail.is-wide { width: 280px; padding: 16px 12px 10px; align-items: stretch; }
+    #rail.is-wide #rail-brand, #rail.is-wide #sidebar-icon { align-self: flex-start; }
+    #rail.is-wide #sidebar-footer { align-items: stretch; }
+    #rail-brand {
+      width: 26px; height: 26px; border-radius: 8px; margin-bottom: 10px;
+      background: color-mix(in srgb, var(--dsw-alias-label-primary) 10%, transparent);
+    }
+    #sidebar-icon { display: grid; place-items: center; }
+    #rail-spacer { flex: 1 1 auto; }
+    /* sidebar.footer.action 列表槽：真实宿主是横向 flex 容器（class 含 footerActions），
+       多个插件的迷你条按顺序排列；本插件用 :has(.gr-mini.is-wide/is-rail) + flex-wrap 强制
+       独占整行，形成与网易云迷你条上下堆叠。这里完全按真实结构 mock。 */
+    #sidebar-footer {
+      width: 100%; display: flex; align-items: center;
+      gap: 6px; overflow: visible;
+    }
+    #foreign-mini-slot { flex: 1 0 100%; max-width: 100%; }
+    #sidebar-mini-slot {
+      width: 100%; flex: 1 0 100%; max-width: 100%;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    #rail.is-wide #sidebar-mini-slot { align-items: stretch; }
+    #foreign-mini {
+      width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 8px;
+      padding: 10px; border-radius: 12px; min-height: 78px;
+      border: 1px solid var(--dsw-alias-border-l2);
+      background: var(--dsw-alias-bg-layer-2);
+      color: var(--dsw-alias-label-secondary); font-size: 12px; line-height: 1.35;
+    }
+    #foreign-mini .fm-cover { flex: none; width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, #f43f5e, #ec4899); }
+    #foreign-mini .fm-text { min-width: 0; }
+    #foreign-mini .fm-name { color: var(--dsw-alias-label-primary); font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #foreign-mini .fm-sub { font-size: 11px; color: var(--dsw-alias-label-tertiary); }
+    #foreign-mini .fm-rail { display: none; }
+    /* 收起 56px：网易云也变成 36px 圆形按钮，与本插件 rail 按钮上下排列 */
+    #rail:not(.is-wide) #foreign-mini {
+      width: 36px; height: 36px; min-height: 0; padding: 0; margin: 0 auto;
+      border-radius: 50%; justify-content: center; overflow: hidden;
+    }
+    #rail:not(.is-wide) #foreign-mini .fm-wide { display: none; }
+    #rail:not(.is-wide) #foreign-mini .fm-rail {
+      display: grid; place-items: center; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #f43f5e, #ec4899); color: #fff; font-size: 14px;
+    }
+    #rail-settings {
+      width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center;
+      color: var(--dsw-alias-label-secondary); font-size: 15px;
+      border: 1px solid var(--dsw-alias-border-l1);
+    }
+    #main { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative; }
+    #root { flex: 1 1 auto; min-height: 0; height: auto; }
+    /* 假对话页：模拟当前激活面板不是插件时的 Harness 主区 */
+    #fake-conversation { display: none; flex: 1 1 auto; min-height: 0; flex-direction: column; padding: 56px 28px 20px; gap: 16px; overflow: hidden; }
+    html[data-active-panel="conversation"] #root { display: none; }
+    html[data-active-panel="conversation"] #fake-conversation { display: flex; }
+    #fake-conversation .conv-title { font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--dsw-alias-label-primary); }
+    #fake-conversation .conv-sub { font-size: 13px; color: var(--dsw-alias-label-tertiary); }
+    #fake-conversation .conv-msg {
+      max-width: 640px; padding: 12px 16px; border-radius: 14px; font-size: 13px; line-height: 1.6;
+      background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-secondary);
+      border: 1px solid var(--dsw-alias-border-l1);
+    }
+    #fake-conversation .conv-msg.user { align-self: flex-end; background: var(--dsw-specific-input-major); color: var(--dsw-alias-label-primary); }
+    /* 假 DSH 输入框：面板内容不应遮挡它 */
+    #composer {
+      flex: none; height: 64px; box-sizing: border-box;
+      display: flex; align-items: center; gap: 10px; padding: 0 22px;
+      background: var(--dsw-alias-bg-layer-1);
+      border-top: 1px solid var(--dsw-alias-border-l2);
+    }
+    #composer .composer-input {
+      flex: 1 1 auto; height: 38px; min-width: 0; box-sizing: border-box;
+      display: flex; align-items: center; padding: 0 14px;
+      border: 1px solid var(--dsw-alias-border-l2); border-radius: 12px;
+      background: var(--dsw-specific-input-major);
+      color: var(--dsw-alias-label-tertiary); font-size: 13px;
+    }
+    #composer .composer-send {
+      flex: none; width: 32px; height: 32px; border-radius: 999px;
+      background: var(--dsw-alias-label-primary); color: var(--dsw-alias-bg-base);
+      display: grid; place-items: center; font-size: 15px; font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="rail">
+      <div id="rail-brand"></div>
+      <div id="sidebar-icon"></div>
+      <div id="rail-spacer"></div>
+      <div id="sidebar-footer" class="footerActions">
+        <div id="foreign-mini-slot" style="display:none">
+          <div id="foreign-mini" data-nm-mini data-nm="mini-player">
+            <div class="fm-wide" style="display:flex;align-items:center;gap:8px;min-width:0;width:100%">
+              <div class="fm-cover"></div>
+              <div class="fm-text">
+                <div class="fm-name">网易云音乐 · 晴天</div>
+                <div class="fm-sub">周杰伦 · 正在播放（harness mock 的另一个 footer action）</div>
+              </div>
+            </div>
+            <div class="fm-rail">♪</div>
+          </div>
+        </div>
+        <div id="sidebar-mini-slot"></div>
+      </div>
+      <div id="rail-settings" aria-hidden="true">⚙</div>
+    </div>
+    <div id="main">
+      <div id="root"></div>
+      <div id="fake-conversation" aria-hidden="true">
+        <div class="conv-title">DeepSeek 对话</div>
+        <div class="conv-sub">harness 模拟的其它面板（非全球电台），用于验证侧栏迷你播放器</div>
+        <div class="conv-msg user">在写一份插件验收报告，顺便听点电台。</div>
+        <div class="conv-msg">好的，电台面板已在侧栏打开；当前面板切走后，迷你播放器会出现在左侧栏底部。</div>
+      </div>
+      <div id="composer" aria-hidden="true">
+        <div class="composer-input">给 DeepSeek 发消息…（harness 假输入框，验证面板内容不遮挡）</div>
+        <div class="composer-send">↑</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- React 18 UMD（离线保存于 assets/，与 netease-panel-selftest 同一份） -->
+  <script src="/react.js"></script>
+  <script src="/react-dom.js"></script>
+  <script>
+    /* ------------------------------------------------------------------
+     * 验收脚手架：捕获 main / sidebar.panellist / sidebar.footer.action
+     * 只认 CONTRACT.md §5 的 data-gr 钩子，不依赖 class 名
+     * ------------------------------------------------------------------ */
+    window.__slots = { main: null, 'sidebar.panellist': null, 'sidebar.footer.action': null };
+    window.__slotSpecs = {};
+    window.__slotInjections = [];
+    window.__disposers = [];
+    window.__selectedPanels = [];
+    window.__localeRegistered = {};
+    window.__lang = 'zh';
+    window.__mountError = null;
+    window.__plugin = null;
+    window.__mounted = false;
+    window.__errors = [];
+
+    // 模拟 Harness 当前激活面板（global-radio / conversation ...），供 usePanelInfo 注入
+    window.__activePanelId = 'global-radio';
+    window.__miniWide = false;
+    window.__sidebarWide = false;
+    window.__panelStore = {
+      id: 'global-radio',
+      listeners: new Set(),
+      get: function () { return this.id; },
+      set: function (id) {
+        this.id = id;
+        window.__activePanelId = id;
+        try { document.documentElement.dataset.activePanel = id } catch (_) {}
+        this.listeners.forEach(function (fn) { try { fn() } catch (_) {} });
+      },
+      subscribe: function (fn) { this.listeners.add(fn); var self = this; return function () { self.listeners.delete(fn) }; }
+    };
+    document.documentElement.dataset.activePanel = 'global-radio';
+
+    window.__logError = function (err) {
+      const text = String((err && (err.stack || err.message)) || err);
+      window.__errors.push(text);
+      console.error(text);
+    };
+
+    window.__ModuleLoader__ = {
+      load: function (entry) {
+        window.__pluginEntry = entry;
+        try {
+          window.__plugin = entry.factory(function require(name) {
+            if (name === 'react') return window.React;
+            if (name === 'react-dom') return window.ReactDOM;
+            throw new Error('unexpected require: ' + name);
+          });
+        } catch (err) {
+          window.__mountError = 'factory 抛错: ' + ((err && (err.stack || err.message)) || err);
+          window.__logError(err);
+        }
+      }
+    };
+
+    function createCtx() {
+      const localeStore = window.__localeRegistered; // ns -> { zh, en }
+      const listeners = [];
+      const lang = () => window.__lang;
+      function lookup(ns, key) {
+        const dict = localeStore[ns] || {};
+        const exact = (dict[lang()] || {})[key];
+        if (exact != null) return exact;
+        const zh = (dict.zh || {})[key];
+        if (zh != null) return zh;
+        for (const k of Object.keys(dict)) {
+          const v = (dict[k] || {})[key];
+          if (v != null) return v;
+        }
+        return undefined;
+      }
+      function makeT(ns) {
+        return function t(key, vars) {
+          let s = lookup(ns, key);
+          if (s == null) return undefined;
+          if (typeof s === 'string' && vars && typeof vars === 'object') {
+            s = s.replace(/\{(\w+)\}/g, function (m, k) {
+              return vars[k] == null ? m : String(vars[k]);
+            });
+          }
+          return s;
+        };
+      }
+      const locale = {
+        get current() { return lang(); },
+        get locale() { return lang(); },
+        get lang() { return lang(); },
+        register: function (ns, a, b) {
+          if (a && typeof a === 'object') {
+            // register(ns, { zh, en })
+            localeStore[ns] = localeStore[ns] || {};
+            for (const code of Object.keys(a)) {
+              localeStore[ns][code] = Object.assign({}, localeStore[ns][code], a[code]);
+            }
+          } else if (typeof a === 'string' && b && typeof b === 'object') {
+            // register(ns, 'zh', {...})
+            localeStore[ns] = localeStore[ns] || {};
+            localeStore[ns][a] = Object.assign({}, localeStore[ns][a], b);
+          }
+          listeners.forEach(function (fn) { try { fn() } catch (_) {} });
+          return function () {};
+        },
+        bind: function (ns) { return makeT(ns || 'global-radio'); },
+        t: function (a, b, c) {
+          if (typeof b === 'string') return makeT(a)(b, c);
+          return makeT('global-radio')(a, b);
+        },
+        subscribe: function (fn) { listeners.push(fn); return function () {}; },
+        setLocale: function (l) { window.__lang = l; listeners.forEach(function (fn) { try { fn() } catch (_) {} }); }
+      };
+
+      const slots = {
+        inject: function (name, factory) {
+          window.__slotInjections.push(name);
+          return factory();
+        },
+        register: function (spec, comp) {
+          if (!spec || !spec.name) throw new Error('slots.register 需要 { name }');
+          window.__slots[spec.name] = comp;
+          window.__slotSpecs[spec.name] = spec;
+          return function () { window.__slots[spec.name] = null; };
+        }
+      };
+
+      const layout = {
+        get panel() { return window.__panelStore.get(); },
+        get activePanelId() { return window.__panelStore.get(); },
+        selectPanel: function (id) {
+          window.__selectedPanels.push(id);
+          if (id) {
+            const prev = window.__panelStore.get();
+            window.__panelStore.set(id);
+            if (id !== prev) syncMainForPanel(id);
+          }
+          return true;
+        },
+        openPanel: function (id) { return this.selectPanel(id); },
+        focusPanel: function (id) { return this.selectPanel(id); },
+        isPanelActive: function (id) { return window.__panelStore.get() === id; },
+        getState: function () { return { panel: window.__panelStore.get() }; }
+      };
+
+      const noop = function () {};
+      const ctx = {
+        effect: function (fn) {
+          const d = fn();
+          if (typeof d === 'function') window.__disposers.push(d);
+          return d;
+        },
+        get: function () { return undefined; },
+        slots: slots,
+        locale: locale,
+        layout: layout,
+        logger: { info: noop, warn: noop, error: noop, debug: noop },
+        webServer: { register: function () { return noop(); } },
+        remote: { session: { prompt: function () { return Promise.resolve({ ok: true }); } } },
+        on: function () { return noop; },
+        once: function () { return noop; },
+        off: noop,
+        emit: noop,
+      };
+      window.__ctx = ctx;
+      return ctx;
+    }
+
+    window.__unmount = function () {
+      for (const d of window.__disposers.splice(0)) {
+        try { if (typeof d === 'function') d(); } catch (_) {}
+      }
+      try { window.__unmountMain() } catch (_) {}
+      for (const key of ['sidebar', 'mini']) {
+        try { if (window['__root_' + key]) window['__root_' + key].unmount(); } catch (_) {}
+      }
+      window.__mounted = false;
+    };
+
+    /* 框架注入给 sidebar.footer.action 的 usePanelInfo（读 window.__panelStore） */
+    function harnessUsePanelInfo(selector) {
+      const React = window.React
+      const id = React.useSyncExternalStore(
+        window.__panelStore.subscribe.bind(window.__panelStore),
+        function () { return window.__panelStore.get(); }
+      )
+      const info = { activePanelId: id, panelId: id, activePanel: id, panel: id }
+      return typeof selector === 'function' ? selector(info) : info
+    }
+    window.__harnessUsePanelInfo = harnessUsePanelInfo;
+
+    /* 真实 Harness 在面板切走时会卸载 main panel 组件；这里同步模拟，
+       否则 client 的 s.pageMounted 永远为 true，侧栏迷你播放器不会出现。 */
+    let mainMounted = false
+    window.__mountMain = function () {
+      const comp = window.__slots.main
+      if (!comp) return false
+      if (!window.__root_root) {
+        window.__root_root = ReactDOM.createRoot(document.getElementById('root'))
+      }
+      window.__root_root.render(React.createElement(comp, {}))
+      mainMounted = true
+      return true
+    }
+    window.__unmountMain = function () {
+      if (!mainMounted) return
+      const root = window.__root_root
+      // React 18: unmount 后同一个 root 不能再次 render，必须丢弃并重新 createRoot
+      window.__root_root = null
+      try { root.unmount() } catch (_) {}
+      mainMounted = false
+    }
+    function syncMainForPanel(id) {
+      if (id === 'global-radio') {
+        if (!mainMounted) window.__mountMain()
+      } else {
+        window.__unmountMain()
+      }
+    }
+    window.__mainMounted = function () { return mainMounted }
+
+    window.__renderMini = function () {
+      const comp = window.__slots['sidebar.footer.action']
+      if (!comp) return false
+      if (!window.__root_mini) {
+        window.__root_mini = ReactDOM.createRoot(document.getElementById('sidebar-mini-slot'))
+      }
+      window.__root_mini.render(React.createElement(comp, {
+        wide: !!window.__sidebarWide,
+        usePanelInfo: harnessUsePanelInfo,
+      }))
+      return true
+    };
+
+    window.__setActivePanel = function (id) {
+      const prev = window.__panelStore.get()
+      window.__panelStore.set(id)
+      if (id !== prev) syncMainForPanel(id)
+    };
+    window.__setMiniWide = function (wide) {
+      window.__miniWide = !!wide
+      window.__sidebarWide = !!wide
+      if (window.__renderMini) window.__renderMini()
+    };
+    window.__setSidebarWide = function (wide) {
+      window.__sidebarWide = !!wide
+      const rail = document.getElementById('rail')
+      if (rail) {
+        rail.classList.toggle('is-wide', !!wide)
+        rail.style.width = wide ? '280px' : '56px'
+      }
+      if (window.__renderMini) window.__renderMini()
+    };
+
+    window.__mount = async function () {
+      window.__mountError = null;
+      if (!window.__plugin) {
+        window.__mountError = 'window.__plugin 未创建（client.js 未加载或 factory 抛错）';
+        window.__logError(window.__mountError);
+        return false;
+      }
+      try {
+        const plugin = window.__plugin;
+        const ctx = createCtx();
+        const ret = plugin.apply(ctx);
+        if (ret && typeof ret.then === 'function') await ret;
+      } catch (err) {
+        window.__mountError = 'apply 抛错: ' + ((err && (err.stack || err.message)) || err);
+        window.__logError(err);
+        return false;
+      }
+      const main = window.__slots['main'];
+      const icon = window.__slots['sidebar.panellist'];
+      const mini = window.__slots['sidebar.footer.action'];
+      if (!main) {
+        window.__mountError = 'main slot 未注册';
+        window.__logError(window.__mountError);
+        return false;
+      }
+      try {
+        window.__mountMain();
+        if (icon) {
+          window.__root_sidebar = ReactDOM.createRoot(document.getElementById('sidebar-icon'));
+          window.__root_sidebar.render(React.createElement('div', {
+            style: { width: 34, height: 34, display: 'grid', placeItems: 'center', borderRadius: 10, background: 'color-mix(in srgb, currentColor 9%, transparent)' }
+          }, React.createElement(icon, { size: 20, active: true })));
+        }
+        if (mini) window.__renderMini();
+      } catch (err) {
+        window.__mountError = 'mount 抛错: ' + ((err && (err.stack || err.message)) || err);
+        window.__logError(err);
+        return false;
+      }
+      window.__mounted = true;
+      return true;
+    };
+
+    /* 互斥测试：模拟网易云 audio（data-nm-audio），记录它自己的 pause 事件 */
+    window.__addForeignAudio = function () {
+      if (window.__foreignAudio) return true
+      const a = document.createElement('audio')
+      a.setAttribute('data-nm-audio', '')
+      a.loop = true
+      a.src = '/global-radio/api/stream?foreign=1'
+      a.addEventListener('play', function () { a.dataset.eventPlay = String(Date.now()) })
+      a.addEventListener('pause', function () { a.dataset.eventPause = String(Date.now()) })
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      window.__foreignAudio = a
+      return true
+    }
+    window.__removeForeignAudio = function () {
+      const a = window.__foreignAudio
+      if (a) { try { a.pause() } catch (_) {}; a.remove() }
+      window.__foreignAudio = null
+    }
+
+    /* ------------------------------------------------------------------
+     * 只读测试取值助手：让 run.mjs 不必在每个断言里重复大段 DOM 逻辑。
+     * 全部基于契约 §5 的 data-gr 钩子和真实 DOM。
+     * ------------------------------------------------------------------ */
+    window.__grState = function () {
+      const root = document.querySelector('[data-gr="root"]')
+      const mini = document.querySelector('[data-gr="mini-player"]')
+      return {
+        root: !!root,
+        rootPlaying: root ? root.getAttribute('data-playing') : null,
+        playerView: !!document.querySelector('[data-gr="player-view"]'),
+        mini: !!mini,
+        miniPlaying: mini ? mini.getAttribute('data-playing') : null,
+        stationCount: document.querySelectorAll('[data-gr="station"]').length,
+        hero: !!document.querySelector('[data-gr="hero"]'),
+        header: !!document.querySelector('[data-gr="header"]'),
+        search: !!document.querySelector('[data-gr="search"]'),
+        filters: !!document.querySelector('[data-gr="filters"]'),
+        error: !!document.querySelector('[data-gr="error"]'),
+        toast: !!document.querySelector('[data-gr="toast"]'),
+        empty: !!document.querySelector('[data-gr="empty"]'),
+        dock: !!document.querySelector('[data-gr="dock"]'),
+        playerbar: !!document.querySelector('[data-gr="playerbar"]'),
+        banners: document.querySelectorAll('[data-gr="banner"]').length,
+        genres: document.querySelectorAll('[data-gr="genre"]').length,
+        rows: [...document.querySelectorAll('[data-gr="row"]')].map(function (el) { return el.getAttribute('data-row') }),
+        mainMounted: !!(window.__mainMounted && window.__mainMounted()),
+      }
+    }
+
+    window.__grAudio = function () {
+      const a = document.querySelector('audio[data-gr-audio]')
+      if (!a) return { exists: false }
+      const cs = getComputedStyle(a)
+      return {
+        exists: true,
+        src: a.getAttribute('src') || a.src || '',
+        paused: a.paused,
+        currentTime: Number(a.currentTime) || 0,
+        readyState: a.readyState,
+        display: cs.display,
+        parentIsBody: a.parentElement === document.body,
+        inBody: document.body.contains(a),
+        volume: a.volume,
+      }
+    }
+
+    window.__grStations = function () {
+      return [...document.querySelectorAll('[data-gr="station"]')].map(function (el) {
+        const r = el.getBoundingClientRect()
+        const img = el.querySelector('img')
+        return {
+          id: el.getAttribute('data-id'),
+          playing: el.getAttribute('data-playing'),
+          text: (el.textContent || '').trim().slice(0, 140),
+          visible: r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden',
+          imgSrc: img ? (img.getAttribute('src') || '').slice(0, 160) : null,
+          imgNatural: img ? img.naturalWidth : 0,
+        }
+      })
+    }
+
+    window.__grSetSearch = function (value) {
+      const el = document.querySelector('[data-gr="search"]')
+      if (!el) return false
+      const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value').set
+      setter.call(el, String(value))
+      el.dispatchEvent(new Event('input', { bubbles: true }))
+      el.dispatchEvent(new Event('change', { bubbles: true }))
+      return true
+    }
+
+    window.__grCanvasStats = function () {
+      const host = document.querySelector('[data-gr="visualizer"]')
+      const c = host
+        ? (host.tagName === 'CANVAS' ? host : host.querySelector('canvas'))
+        : document.querySelector('canvas[data-gr="visualizer"]')
+      if (!c) return null
+      const r = c.getBoundingClientRect()
+      const out = { w: r.width, h: r.height, cw: c.width, ch: c.height, nonBlank: null, err: null }
+      try {
+        const ctx = c.getContext('2d')
+        if (ctx && c.width > 0 && c.height > 0) {
+          const d = ctx.getImageData(0, 0, c.width, c.height).data
+          let n = 0
+          for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) n++
+          out.nonBlank = n
+        }
+      } catch (e) { out.err = String(e) }
+      return out
+    }
+
+    /* 可视化模式候选控件：兼容「3 个独立按钮」与「1 个循环切换按钮」两种实现 */
+    window.__grModeControls = function () {
+      const view = document.querySelector('[data-gr="player-view"]') || document.body
+      const seen = new Set()
+      const out = []
+      function add(el, kind) {
+        if (!el || seen.has(el)) return
+        seen.add(el)
+        out.push({
+          kind: kind,
+          tag: el.tagName,
+          mode: el.getAttribute('data-mode') || null,
+          text: (el.textContent || '').trim().slice(0, 16),
+          role: el.getAttribute('role') || null,
+          pressed: el.getAttribute('aria-pressed') || el.getAttribute('aria-checked') || null,
+          cls: String(el.className || '').slice(0, 40),
+        })
+      }
+      view.querySelectorAll('[data-gr="visual-mode"]').forEach(function (el) { add(el, 'hook') })
+      view.querySelectorAll('[data-gr="visual-mode"] button, [data-gr="visual-mode"] [role="radio"], [data-gr="visual-mode"] input[type="radio"], [data-gr="visual-mode"] label').forEach(function (el) { add(el, 'child') })
+      view.querySelectorAll('[data-mode]').forEach(function (el) { add(el, 'mode') })
+      view.querySelectorAll('[data-gr="visual-mode"] ~ * [data-mode], button[aria-label*="频谱"], button[aria-label*="环形"], button[aria-label*="波形"]').forEach(function (el) { add(el, 'aux') })
+      return out
+    }
+
+    window.__grModeList = function () {
+      const view = document.querySelector('[data-gr="player-view"]') || document.body
+      const seen = new Set()
+      const out = []
+      function add(el) {
+        if (!el || seen.has(el)) return
+        if (!el.matches('button, [role="radio"], input, label, [data-gr="visual-mode"], [data-mode]')) return
+        seen.add(el)
+        out.push(el)
+      }
+      view.querySelectorAll('[data-gr="visual-mode"] button, [data-gr="visual-mode"] [role="radio"], [data-gr="visual-mode"] input[type="radio"], [data-gr="visual-mode"] label').forEach(add)
+      view.querySelectorAll('[data-mode]').forEach(add)
+      const hooks = [...view.querySelectorAll('[data-gr="visual-mode"]')]
+      // 没有任何子控件时，hook 本身才作为可点击控件
+      if (!out.length) hooks.forEach(add)
+      return out
+    }
+
+    window.__grClickMode = function (i) {
+      const list = window.__grModeList()
+      const el = list[i]
+      if (!el) return { ok: false, count: list.length }
+      try { el.scrollIntoView({ block: 'center' }) } catch (_) {}
+      el.click()
+      return {
+        ok: true,
+        count: list.length,
+        tag: el.tagName,
+        mode: el.getAttribute('data-mode') || null,
+        text: (el.textContent || '').trim().slice(0, 16),
+      }
+    }
+
+    /* 模拟另一个插件（网易云）也往 sidebar.footer.action 里渲染迷你条：用于验证上下堆叠 */
+    window.__setForeignMini = function (visible) {
+      const slot = document.getElementById('foreign-mini-slot')
+      if (!slot) return false
+      slot.style.display = visible ? 'block' : 'none'
+      return !!visible
+    }
+
+    window.addEventListener('error', function (e) { window.__logError(e.error || e.message) });
+    window.addEventListener('unhandledrejection', function (e) { window.__logError(e.reason) });
+  </script>
+  <script src="/client.js"></script>
+  <script>
+    (function () {
+      if (!window.__plugin && !window.__mountError) {
+        window.__mountError = 'client.js 没有调用 window.__ModuleLoader__.load';
+        console.error(window.__mountError);
+      }
+      if (window.__plugin) window.__mount();
+    })();
+  </script>
+</body>
+</html>

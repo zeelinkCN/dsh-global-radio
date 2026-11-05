@@ -1,0 +1,60 @@
+{
+  "name": "@local/global-radio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Global Radio (全球电台) — a DeepSeek Harness plugin: browse and listen to live radio worldwide with FM/AM frequency display, an immersive now-playing page with a live audio visualizer, an in-panel dock, and a sidebar mini player stacked with other players; only one player sounds at a time.",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./assets/icon-256.png"
+  },
+  "files": [
+    ".gitignore",
+    "LICENSE",
+    "README.md",
+    "assets/*.png",
+    "client.js",
+    "cordis.patch.yml",
+    "data/SOURCES.md",
+    "data/seed-stations.json",
+    "docs/*.png",
+    "docs/CONTRACT.md",
+    "index.js",
+    "locale/*.json",
+    "vendor/LICENSE-hls.js",
+    "vendor/hls.light.min.js"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
+    }
+  },
+  "license": "MIT",
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "radio",
+    "global-radio",
+    "streaming",
+    "player"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zeelinkCN/dsh-global-radio.git"
+  },
+  "homepage": "https://github.com/zeelinkCN/dsh-global-radio",
+  "bugs": {
+    "url": "https://github.com/zeelinkCN/dsh-global-radio/issues"
+  }
+}
