@@ -19,6 +19,9 @@ window.__ModuleLoader__.load({
       'welcome.title': '从世界各地的电台开始',
       'welcome.desc': '实时新闻、音乐与谈话，挑一个精选电台即刻收听',
       'action.playPicks': '播放精选',
+      'action.viewAll': '查看全部',
+      'action.loadMore': '加载更多',
+      'action.more': '更多',
       'section.genres': '按类型听',
       'section.genresHint': '点一下，随机挑一个电台开始播放',
       'section.trending': '全球热门',
@@ -160,6 +163,9 @@ window.__ModuleLoader__.load({
       'welcome.title': 'Start with a station from somewhere in the world',
       'welcome.desc': 'Live news, music and talk — pick one of these verified stations',
       'action.playPicks': 'Play picks',
+      'action.viewAll': 'View all',
+      'action.loadMore': 'Load more',
+      'action.more': 'More',
       'section.genres': 'Listen by genre',
       'section.genresHint': 'Tap one to start a random station',
       'section.trending': 'Trending worldwide',
@@ -367,6 +373,23 @@ window.__ModuleLoader__.load({
       return payload.data
     }
 
+    async function apiPost(path, body) {
+      const response = await fetch(apiUrl(path), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(body || {}),
+        cache: 'no-store',
+      })
+      let payload = null
+      try {
+        payload = await response.json()
+      } catch {
+        return null
+      }
+      if (!payload || payload.ok !== true) return null
+      return payload.data
+    }
+
     const streamUrl = (station) => apiUrl('/stream', { url: station && station.url, id: station && station.id })
     const hlsUrl = (station) => apiUrl('/hls', { url: station && station.url })
     const imageUrl = (station) => (station && station.logo ? apiUrl('/img', { url: station.logo }) : '')
@@ -503,6 +526,7 @@ window.__ModuleLoader__.load({
       visualMode: initialVisual,
       otherPlaying: false,
       view: 'browse',
+      collection: null,
       toast: null,
       home: null,
       homeLoading: false,
@@ -2779,6 +2803,36 @@ window.__ModuleLoader__.load({
     }
 
     /* ------------------------------------------------------------------ *
+     * 每日轮换：编辑精选 / banner 按日期稳定随机，第二天自动换一批
+     * ------------------------------------------------------------------ */
+    function dayKey() {
+      const now = new Date()
+      return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`
+    }
+
+    function seededOrder(list, seedText) {
+      const items = (list || []).slice()
+      let seed = 0
+      const text = String(seedText)
+      for (let index = 0; index < text.length; index += 1) seed = (seed * 31 + text.charCodeAt(index)) >>> 0
+      const next = () => {
+        seed = (seed * 1664525 + 1013904223) >>> 0
+        return seed / 4294967296
+      }
+      for (let index = items.length - 1; index > 0; index -= 1) {
+        const swap = Math.floor(next() * (index + 1))
+        const temp = items[index]
+        items[index] = items[swap]
+        items[swap] = temp
+      }
+      return items
+    }
+
+    function dailyPicks(list, count, salt) {
+      return seededOrder(availableStations(list), `${dayKey()}:${salt || 'picks'}`).slice(0, count)
+    }
+
+    /* ------------------------------------------------------------------ *
      * 发现页（网易云风格首页）：大 banner + 中等分类卡 + 小横滑列表
      * ------------------------------------------------------------------ */
     const GENRE_TILES = [
@@ -2851,7 +2905,7 @@ window.__ModuleLoader__.load({
         setPicked(null)
       }, [s.home && s.home.updatedAt])
       if (!seedList.length) return null
-      const chosen = picked && picked.length ? picked : seedList.slice(0, 3)
+      const chosen = picked && picked.length ? picked : dailyPicks(seedList, 3, 'banner')
       const shuffle = () => {
         if (seedList.length <= 3) {
           setPicked(seedList)
@@ -2924,15 +2978,22 @@ window.__ModuleLoader__.load({
           GENRE_TILES.map((tile) => {
             const busy = props.busyId === tile.id
             return h(
-              'button',
+              'div',
               {
                 key: tile.id,
-                type: 'button',
                 className: cx('gr-genre', busy && 'is-busy'),
                 'data-gr': 'genre',
                 'data-genre': tile.id,
-                onClick: () => props.onPick(tile),
+                role: 'button',
+                tabIndex: 0,
                 title: t('genre.' + tile.id),
+                onClick: () => props.onPick(tile),
+                onKeyDown: (event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    props.onPick(tile)
+                  }
+                },
               },
               h('span', { className: 'gr-genre-icon' }, busy ? h(Spinner, null) : h(Icon, { name: tile.icon, size: 20 })),
               h(
@@ -2941,7 +3002,21 @@ window.__ModuleLoader__.load({
                 h('span', { className: 'gr-genre-name' }, t('genre.' + tile.id)),
                 h('span', { className: 'gr-genre-sub' }, t('genre.' + tile.id + '.sub')),
               ),
-              h('span', { className: 'gr-genre-arrow' }, h(Icon, { name: 'chevron', size: 14 })),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'gr-genre-more',
+                  'data-gr': 'genre-more',
+                  'data-genre': tile.id,
+                  title: t('action.viewAll') + ' · ' + t('genre.' + tile.id),
+                  onClick: (event) => {
+                    event.stopPropagation()
+                    props.onMore(tile)
+                  },
+                },
+                h(Icon, { name: 'chevron', size: 14 }),
+              ),
             )
           }),
         ),
@@ -2985,7 +3060,19 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'gr-block-head' },
-          h('h3', null, props.title),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'gr-block-title',
+              'data-gr': 'row-more',
+              'data-row': props.id,
+              onClick: props.onMore,
+              title: t('action.viewAll') + ' · ' + props.title,
+            },
+            h('span', { className: 'gr-block-name' }, props.title),
+            h(Icon, { name: 'chevron', size: 14, className: 'gr-block-chevron' }),
+          ),
           props.hint ? h('span', { className: 'gr-block-hint' }, props.hint) : null,
           h('span', { className: 'gr-block-count' }, items.length),
         ),
@@ -3037,16 +3124,16 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'gr-discover' },
         h(BannerGrid, { t, s }),
-        h(GenreGrid, { t, busyId: props.busyGenre, onPick: props.onGenre }),
+        h(GenreGrid, { t, busyId: props.busyGenre, onPick: props.onGenre, onMore: (tile) => props.onOpenCollection(genreCollectionDef(tile, t)) }),
         s.recent.length
-          ? h(RowSection, { id: 'recent', title: t('section.recent'), hint: '', items: availableStations(s.recent).slice(0, 12), t, s })
+          ? h(RowSection, { id: 'recent', title: t('section.recent'), hint: '', items: availableStations(s.recent).slice(0, 12), t, s, onMore: () => props.onOpenCollection(rowCollectionDef(s, 'recent', t)) })
           : null,
         s.favorites.length
-          ? h(RowSection, { id: 'favorites', title: t('section.favorites'), hint: '', items: availableStations(s.favorites).slice(0, 12), t, s })
+          ? h(RowSection, { id: 'favorites', title: t('section.favorites'), hint: '', items: availableStations(s.favorites).slice(0, 12), t, s, onMore: () => props.onOpenCollection(rowCollectionDef(s, 'favorites', t)) })
           : null,
-        h(RowSection, { id: 'popular', title: t('section.popular'), hint: t('section.popularHint'), items: popular.slice(0, 12), t, s }),
-        china.length ? h(RowSection, { id: 'china', title: t('section.china'), hint: t('section.chinaHint'), items: china.slice(0, 12), t, s }) : null,
-        h(RowSection, { id: 'seed', title: t('section.seed'), hint: t('section.seedHint'), items: seed.slice(0, 12), t, s }),
+        h(RowSection, { id: 'popular', title: t('section.popular'), hint: t('section.popularHint'), items: popular.slice(0, 12), t, s, onMore: () => props.onOpenCollection(rowCollectionDef(s, 'popular', t)) }),
+        china.length ? h(RowSection, { id: 'china', title: t('section.china'), hint: t('section.chinaHint'), items: china.slice(0, 12), t, s, onMore: () => props.onOpenCollection(rowCollectionDef(s, 'china', t)) }) : null,
+        h(RowSection, { id: 'seed', title: t('section.seed'), hint: t('section.seedHint'), items: dailyPicks(seed, 12, 'seed-row'), t, s, onMore: () => props.onOpenCollection(rowCollectionDef(s, 'seed', t)) }),
         s.home.source === 'seed' ? h('div', { className: 'gr-source-note' }, h(Icon, { name: 'radio', size: 13 }), t('section.seedHint')) : null,
       )
     }
@@ -3202,6 +3289,173 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /* ------------------------------------------------------------------ *
+     * 电台集合页（点板块标题 / 分类卡「更多」进入，支持加载更多）
+     * ------------------------------------------------------------------ */
+    function rowCollectionDef(s, rowId, t) {
+      const base = { key: 'row:' + rowId }
+      if (rowId === 'popular') {
+        return Object.assign(base, { kind: 'popular', title: t('section.popular'), hint: t('section.popularHint'), items: availableStations(s.home.popular || []) })
+      }
+      if (rowId === 'china') {
+        return Object.assign(base, { kind: 'country', country: 'CN', title: t('section.china'), hint: t('section.chinaHint'), items: availableStations(s.home.china || []) })
+      }
+      if (rowId === 'seed') {
+        return Object.assign(base, { kind: 'local', title: t('section.seed'), hint: t('section.seedHint'), items: availableStations(s.home.seed || []) })
+      }
+      if (rowId === 'recent') {
+        return Object.assign(base, { kind: 'local', title: t('section.recent'), hint: '', items: availableStations(s.recent || []) })
+      }
+      if (rowId === 'favorites') {
+        return Object.assign(base, { kind: 'local', title: t('section.favorites'), hint: '', items: availableStations(s.favorites || []) })
+      }
+      return null
+    }
+
+    function genreCollectionDef(tile, t) {
+      if (!tile) return null
+      const title = t('genre.' + tile.id)
+      const hint = t('genre.' + tile.id + '.sub')
+      if (tile.kind === 'tag') return { key: 'genre:' + tile.id, kind: 'tag', tag: tile.tag, title, hint, items: [] }
+      if (tile.kind === 'country') return { key: 'genre:' + tile.id, kind: 'country', country: tile.country, title, hint, items: [] }
+      return { key: 'genre:' + tile.id, kind: 'popular', title, hint, items: [] }
+    }
+
+    function openCollection(def) {
+      if (!def) return
+      const items = availableStations(def.items || [])
+      const collection = {
+        key: def.key || String(Date.now()),
+        title: def.title || '',
+        hint: def.hint || '',
+        kind: def.kind || 'local',
+        country: def.country || '',
+        tag: def.tag || '',
+        q: def.q || '',
+        items,
+        offset: items.length,
+        limit: 36,
+        hasMore: false,
+        loading: false,
+        error: '',
+      }
+      setState({ collection, view: 'collection' })
+      if (collection.kind !== 'local') loadCollectionPage(true).catch(() => {})
+    }
+
+    async function loadCollectionPage(reset) {
+      const current = state.collection
+      if (!current) return
+      if (current.kind === 'local') {
+        setState({ collection: Object.assign({}, current, { loading: false, hasMore: false }) })
+        return
+      }
+      const offset = reset ? 0 : current.offset
+      setState({ collection: Object.assign({}, current, { loading: true, error: '' }) })
+      try {
+        const params = { limit: current.limit || 36, offset }
+        if (current.kind === 'country') params.country = current.country
+        else if (current.kind === 'tag') params.tag = current.tag
+        else if (current.kind === 'search') params.q = current.q
+        const data = await apiGet('/search', params)
+        if (state.collection && state.collection.key !== current.key) return
+        const pageItems = availableStations((data && data.items) || [])
+        const previous = reset ? [] : (state.collection && state.collection.items) || []
+        const seen = new Set(previous.map((item) => item.id))
+        const merged = reset ? pageItems : previous.concat(pageItems.filter((item) => !seen.has(item.id)))
+        setState({
+          collection: Object.assign({}, state.collection, {
+            items: merged,
+            offset: offset + pageItems.length,
+            hasMore: pageItems.length >= (current.limit || 36),
+            loading: false,
+            error: '',
+          }),
+        })
+      } catch (err) {
+        if (!state.collection || state.collection.key !== current.key) return
+        setState({ collection: Object.assign({}, state.collection, { loading: false, error: String((err && err.message) || err) }) })
+      }
+    }
+
+    function CollectionView(props) {
+      const t = useT()
+      const s = useRadioStore()
+      const collection = s.collection
+      if (!collection) return null
+      const playFrom = (station, index) =>
+        playStation(station, {
+          queue: collection.items.slice(index).concat(collection.items.slice(0, index)),
+        })
+      return h(
+        'div',
+        { className: 'gr-root gr-collection-root', 'data-gr': 'root', 'data-view': 'collection' },
+        h(
+          'div',
+          { className: 'gr-scroll', 'data-gr': 'scroll' },
+          h(
+            'div',
+            { className: 'gr-collection-head', 'data-gr': 'collection' },
+            h(
+              'button',
+              {
+                type: 'button',
+                className: 'gr-back-btn',
+                'data-gr': 'back',
+                onClick: () => setState({ view: 'browse' }),
+                title: t('label.back'),
+              },
+              h(Icon, { name: 'back', size: 16 }),
+              t('label.back'),
+            ),
+            h(
+              'div',
+              { className: 'gr-collection-title' },
+              h('h2', null, collection.title),
+              h('p', null, collection.hint || t('label.stationCount', { n: collection.items.length })),
+            ),
+            collection.loading ? h(Spinner, null) : null,
+          ),
+          h(
+            'div',
+            { className: 'gr-wrap' },
+            collection.error
+              ? h(ErrorState, { title: t('error.network'), hint: collection.error, onRetry: () => loadCollectionPage(true) })
+              : !collection.items.length && !collection.loading
+                ? h(EmptyState, { title: t('error.empty'), hint: t('search.emptyHint') })
+                : h(StationGrid, { items: collection.items, t, s, onPlay: playFrom }),
+            collection.hasMore
+              ? h(
+                'div',
+                { className: 'gr-load-more-wrap' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'gr-btn',
+                    'data-gr': 'load-more',
+                    disabled: collection.loading,
+                    onClick: () => loadCollectionPage(false),
+                  },
+                  collection.loading ? h(Spinner, null) : h(Icon, { name: 'refresh', size: 14 }),
+                  t('action.loadMore'),
+                ),
+              )
+              : null,
+            h(
+              'footer',
+              { className: 'gr-foot' },
+              h('span', null, 'Radio Browser'),
+              h('span', { className: 'gr-foot-dot' }, '·'),
+              h('span', null, t('meta.tagline')),
+            ),
+          ),
+        ),
+        h(PlayerBar, { t }),
+        s.toast ? h(Toast, { toast: s.toast }) : null,
+      )
+    }
+
     function Page() {
       const t = useT()
       const s = useRadioStore()
@@ -3216,13 +3470,14 @@ window.__ModuleLoader__.load({
       }, [])
 
       React.useEffect(() => {
-        if (s.view !== 'player') return undefined
+        if (s.view !== 'player' && s.view !== 'collection') return undefined
         const onKey = (event) => {
           if (event.key === 'Escape') {
             event.preventDefault()
             setView('browse')
             return
           }
+          if (s.view !== 'player') return
           if (event.key === ' ' || event.code === 'Space') {
             const tag = event.target && event.target.tagName
             if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'SELECT') return
@@ -3295,6 +3550,9 @@ window.__ModuleLoader__.load({
       if (s.view === 'player') {
         return h(PlayerView, { t })
       }
+      if (s.view === 'collection' && s.collection) {
+        return h(CollectionView, { t })
+      }
 
       const searchActive = isFilterActive(s.query)
       return h(
@@ -3321,7 +3579,7 @@ window.__ModuleLoader__.load({
             { className: 'gr-wrap' },
             searchActive
               ? h(ResultsView, { t, s })
-              : h(HomeDiscover, { t, s, busyGenre, onGenre: playRandomGenre }),
+              : h(HomeDiscover, { t, s, busyGenre, onGenre: playRandomGenre, onOpenCollection: openCollection }),
             h(
               'footer',
               { className: 'gr-foot' },
@@ -3780,7 +4038,7 @@ window.__ModuleLoader__.load({
     .gr-genres{margin:0 0 8px}
     .gr-genre-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px}
     .gr-genre{
-      display:flex;align-items:center;gap:11px;min-height:66px;padding:11px 12px;
+      display:flex;align-items:center;gap:8px;min-height:66px;padding:11px 8px 11px 12px;
       border-radius:16px;border:1px solid var(--gr-line2);background:color-mix(in srgb,var(--gr-l1) 44%,transparent);
       cursor:pointer;text-align:left;color:inherit;
       transition:background 160ms ease,border-color 160ms ease,transform 160ms ease,box-shadow 160ms ease;
@@ -3823,6 +4081,35 @@ window.__ModuleLoader__.load({
     .gr-skeleton-rowcard{display:block;width:100%;aspect-ratio:.72;border-radius:16px;background:var(--gr-fill);animation:gr-shimmer 1.4s ease-in-out infinite}
     .gr-skeleton-rowcard:nth-child(2n){animation-delay:.2s}
 
+    .gr-block-title{
+      display:inline-flex;align-items:center;gap:4px;min-width:0;padding:0;border:0;background:none;
+      color:inherit;cursor:pointer;text-align:left;font:inherit;
+    }
+    .gr-block-title:hover .gr-block-name{color:color-mix(in srgb,var(--gr-accent) 72%,var(--gr-t1))}
+    .gr-block-name{font-size:17px;font-weight:760;letter-spacing:-.02em;line-height:1.2;white-space:nowrap}
+    .gr-block-chevron{color:var(--gr-t3);opacity:.75;transition:transform 150ms ease,color 150ms ease;flex:none}
+    .gr-block-title:hover .gr-block-chevron{transform:translateX(2px);color:var(--gr-accent);opacity:1}
+    .gr-genre-more{
+      width:26px;height:26px;flex:none;border:1px solid transparent;border-radius:8px;padding:0;
+      background:transparent;color:var(--gr-t3);display:grid;place-items:center;cursor:pointer;opacity:.72;
+      transition:background 150ms ease,color 150ms ease,opacity 150ms ease;
+    }
+    .gr-genre-more:hover{background:var(--gr-fill2);color:var(--gr-accent);opacity:1}
+    .gr-collection-root .gr-scroll{padding-top:calc(var(--dsh-frame-top-clearance,0px) + 10px)}
+    .gr-collection-head{
+      max-width:1440px;margin:0 auto;padding:6px 30px 12px;display:flex;align-items:center;gap:14px;
+    }
+    .gr-collection-title{min-width:0;display:flex;flex-direction:column;gap:1px;line-height:1.25}
+    .gr-collection-title h2{margin:0;font-size:22px;font-weight:780;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .gr-collection-title p{margin:0;font-size:11px;color:var(--gr-t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .gr-back-btn{
+      display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 13px 0 9px;flex:none;
+      border-radius:999px;border:1px solid var(--gr-line);background:color-mix(in srgb,var(--gr-l1) 58%,transparent);
+      color:var(--gr-t2);font-size:11.5px;font-weight:650;cursor:pointer;
+    }
+    .gr-back-btn:hover{background:var(--gr-fill2);color:var(--gr-t1)}
+    .gr-load-more-wrap{display:flex;justify-content:center;padding:24px 0 8px}
+    .gr-load-more-wrap .gr-btn{min-width:140px}
     /* ---------------------- 面板底部大播放条 ---------------------- */
     .gr-playerbar-shell{flex:none;width:100%;max-width:1440px;margin:0 auto;padding:10px 30px 16px}
     .gr-playerbar{
@@ -4345,7 +4632,104 @@ window.__ModuleLoader__.load({
           'global-radio: sidebar mini player',
         )
 
-        /* 5) 调试句柄（验收 / 排障用） */
+        /* 5) Agent 工具桥：轮询 Host 命令 + 上报播放状态 */
+        effect(() => {
+          let stopped = false
+          let cursor = 0
+          let pollTimer = null
+          let stateTimer = null
+          let postTimer = null
+          let posting = false
+
+          const postState = () => {
+            if (stopped || posting) return
+            posting = true
+            const station = state.station
+            apiPost('/player/state', {
+              station: station
+                ? {
+                    id: station.id,
+                    name: station.name,
+                    frequency: station.frequency || '',
+                    country: station.country || '',
+                    countryCode: station.countryCode || '',
+                    codec: station.codec || '',
+                    bitrate: station.bitrate || 0,
+                    hls: !!station.hls,
+                  }
+                : null,
+              playing: !!state.playing,
+              loading: !!state.loading,
+              error: state.error || '',
+              volume: state.volume,
+              muted: state.muted,
+            })
+              .catch(() => {})
+              .finally(() => {
+                posting = false
+              })
+          }
+
+          const schedulePost = () => {
+            if (stopped || postTimer) return
+            postTimer = setTimeout(() => {
+              postTimer = null
+              postState()
+            }, 300)
+          }
+          const unsubscribe = subscribeStore(schedulePost)
+
+          const handleCommand = async (command) => {
+            if (stopped || !command) return
+            if (command.type === 'play' && command.station) {
+              const queue = Array.isArray(command.queue) && command.queue.length ? command.queue : undefined
+              playStation(command.station, { force: true, queue })
+              return
+            }
+            if (command.type !== 'control') return
+            const action = String(command.action || '')
+            if (action === 'pause') pauseRadio()
+            else if (action === 'resume') resumeRadio()
+            else if (action === 'toggle') togglePlay()
+            else if (action === 'next') playNext()
+            else if (action === 'prev') playPrev()
+            else if (action === 'volume') setVolume(command.volume)
+          }
+
+          const poll = async () => {
+            if (stopped) return
+            try {
+              const data = await apiGet('/player/commands', { cursor })
+              if (data) {
+                cursor = Number(data.cursor) || cursor
+                const commands = Array.isArray(data.commands) ? data.commands : []
+                for (const command of commands) await handleCommand(command)
+                if (commands.length) postState()
+              }
+            } catch {
+              /* ignore */
+            }
+            if (!stopped) pollTimer = setTimeout(poll, 1200)
+          }
+
+          poll()
+          stateTimer = setInterval(postState, 3000)
+          postState()
+
+          return () => {
+            stopped = true
+            if (pollTimer) clearTimeout(pollTimer)
+            if (stateTimer) clearInterval(stateTimer)
+            if (postTimer) clearTimeout(postTimer)
+            try {
+              unsubscribe()
+            } catch {
+              /* ignore */
+            }
+          }
+        }, 'global-radio: agent bridge')
+
+        /* 6) 调试句柄（验收 / 排障用） */
         effect(() => {
           try {
             window.__GLOBAL_RADIO__ = {

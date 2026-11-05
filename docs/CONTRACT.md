@@ -177,6 +177,28 @@ HLS 播放列表与分片代理（m3u8 用）。要求：
 - 内存 LRU 缓存（key=url，最多 200 项 / 32 MB，TTL 24h），命中直接返回。
 - 失败返回 404 空响应（不返回 JSON，`<img onError>` 走占位图）。
 
+### 2.7b `GET /global-radio/api/player/commands?cursor=<seq>`
+
+Agent 工具命令队列（供浏览器客户端 1.2s 轮询执行）：
+
+```jsonc
+{ "cursor": 12, "commands": [ { "seq": 13, "type": "play", "station": Station, "queue": [Station...] },
+                               { "seq": 14, "type": "control", "action": "pause|resume|next|prev|volume", "volume": 0.8 } ] }
+```
+
+命令 90s 过期；客户端按 cursor 拉增量，执行后 `POST /player/state` 上报。
+
+### 2.7c `POST /global-radio/api/player/state`
+
+浏览器上报当前播放器状态（JSON）：
+
+```jsonc
+{ "station": { "id","name","frequency","country","countryCode","codec","bitrate","hls" } | null,
+  "playing": true, "loading": false, "error": "", "volume": 0.8, "muted": false }
+```
+
+Host 缓存最近状态，供 `radio_player({action:"status"})` / `radio_play` 确认使用；同时用于判断页面是否在线。
+
 ### 2.8 `GET /global-radio/api/hls-runtime.js`
 
 - 若 `vendor/hls.light.min.js` 存在：`Content-Type: application/javascript; charset=utf-8`、`Cache-Control: public, max-age=604800`、内容原样返回。
@@ -222,10 +244,12 @@ ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
 - `browse` 视图（默认，网易云风格发现页）：
   - `[data-gr="header"]`：品牌图标 + 「全球电台」+ 搜索框（`data-gr="search"`）+ 刷新 + 「正在播出」状态。
   - 发现页（上方内容，可滚动）：
-    - `[data-gr="banners"]`：3 张精选大 banner（第一张跨两行），`[data-gr="banner"]` 展示台标、台名、频率、国家/tags；点击播放该台。
+    - `[data-gr="banners"]`：3 张精选大 banner（第一张跨两行），`[data-gr="banner"]` 展示台标、台名、频率、国家/tags；点击播放该台。初始 3 个按日期每日轮换。
       右侧「换一批」按钮 `[data-gr="banner-shuffle"]` 从精选池随机换 3 个台（初始为精选前 3），不固定。
     - `[data-gr="genres"]`：12 个中等分类卡 `[data-gr="genre"][data-genre]`（新闻/世界之声/古典/爵士/电子/摇滚/谈话/华语/日本/韩国/英国/法国）。**点一下从该分类随机挑一台播放**并 toast 提示。
     - 自适应网格列表 `[data-gr="row"][data-row=popular|china|seed|recent|favorites]`（随窗口宽度 6/5/4/3/2 列换行，不横向裁切、不需要拖动），卡片 `[data-gr="station"]`（logo/台名/频率）。
+    - 板块标题 `[data-gr="row-more"][data-row]` 点击进入集合页；分类卡右侧 `[data-gr="genre-more"][data-genre]` 进入对应集合页。集合页 `[data-gr="collection"]` 用 `[data-gr="station"]` 网格展示全部频道，`[data-gr="load-more"]` 分页加载（36 条/页），`[data-gr="back"]` 返回。
+    - banner 初始 3 个按「日期」做随机种子每日轮换；「换一批」即时随机。
   - **底部大播放条** `[data-gr="playerbar"]`（选中电台后常驻，占面板自己的布局行，不 fixed、不遮挡内容）：
     - 左侧台标 + 台名 + 频率/国家 + tags；中间 **上一台 / 播放暂停 / 下一台（居中对称）**；右侧 收藏 + 音量 + 展开播放页。
     - 控件 hook：`data-gr="toggle|prev|next|favorite|open-player|expand|volume"`。
@@ -278,6 +302,18 @@ ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
 - 收藏/最近均以 Station 快照存，离线也能展示。
 - 「下一台 / 上一台」基于进入播放页时所在列表顺序 + `recent` 兜底；单台也允许单曲循环式重连。
 
+### 4.6 Agent 工具（对话里直接点播）
+
+Host 注册两个 Agent 工具（`ctx.get('tools').register`），并注入 systemPrompt 段落：
+
+| 工具 | 作用 |
+| --- | --- |
+| `radio_play` | 解析 query（城市/台名/频率）、genre、country、random 后入队播放；返回实际电台名/频率；等待客户端确认后报告「正在播放」 |
+| `radio_player` | `status` / `pause` / `resume` / `next` / `prev` / `volume` / `search` / `random` |
+
+流程：工具解析电台 → `pushPlayerCommand({type:'play',station,queue})` → 浏览器轮询 `/player/commands` → `playStation()` → `POST /player/state` → 工具确认状态。
+系统提示明确：**用户提到电台 / 广播 / FM / AM / 收音机 / 网络电台时用本插件工具，不要用网易云音乐工具**；歌曲/歌单才用网易云。
+
 ### 4.5 文案与主题
 
 - 所有可见文案走 `ctx.locale`（`register('global-radio','zh'|'en',dict)` + `bind`），缺失回退中文常量。
@@ -291,7 +327,7 @@ ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
   `data-gr="favorite"`、`data-gr="open-player"`、`data-gr="fullscreen"`、`data-gr="back"`、
   `data-gr="mini-player"`、`data-gr="mini-toggle"`、`data-gr="mini-prev"`、`data-gr="mini-next"`、
   `data-gr="nav"`、`data-gr="country"`、`data-gr="tag"`、`data-gr="toast"`、`data-gr="player-station"`、
-  `data-gr="banners"`、`data-gr="banner"`、`data-gr="banner-shuffle"`、`data-gr="genres"`、`data-gr="genre"`（带 `data-genre`）、
+  `data-gr="banners"`、`data-gr="banner"`、`data-gr="banner-shuffle"`、`data-gr="genres"`、`data-gr="genre"`（带 `data-genre`）、`data-gr="genre-more"`、`data-gr="row-more"`、`data-gr="collection"`、`data-gr="load-more"`、
   `data-gr="row"`（带 `data-row`）、`data-gr="playerbar"`、`data-gr="expand"`。
   （旧版 `data-gr="dock"` 已移除，底部控件统一为 `playerbar`。）
 - 播放状态：根节点 `data-playing="true|false"`；迷你条同样带 `data-playing`。
@@ -309,6 +345,7 @@ ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
 7. HLS：mock `/hls` 返回改写后的 m3u8；hls 电台播放时无 console error（无 hls.js 时显示明确错误而非崩溃）。
 8. 主题：深/浅色截图；1440/1024/600 三档无横向溢出；侧栏宽/窄两态迷你条截图。
 9. 错误态：`/home` 500 → `[data-gr="error"]` + 重试可恢复；`/stream` 失败 → 自动请求 `/alternates`，无候选时 toast「暂时无法播放」并把台移出列表、不崩溃。
+10. Agent 工具：`radio_play({query:"上海"})` 会让客户端在 2s 内播放上海电台并上报状态；`radio_player(status/pause/resume)` 能读到/控制该状态；电台/广播提示走 radio 工具而不是网易云。
 10. 真实联调（Lead/verifier 在真实 Harness 页面上）：侧栏出现图标，点开渲染；真实 Radio Browser 播放 10s 音频 `currentTime` 前进；切到对话后迷你条出现；开始播网易云时电台自动暂停。
 
 ## 7. 非目标

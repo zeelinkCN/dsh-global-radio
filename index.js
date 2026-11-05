@@ -589,6 +589,42 @@ export function apply(ctx) {
   const radio = createRadioBrowser()
   const seedStations = loadSeedFile()
 
+  /* ------------------------------------------------------------------ *
+   * Agent 工具桥：Host 命令队列 + 浏览器端状态上报
+   * 播放发生在浏览器（<audio>），所以工具只入队命令，客户端 1.2s 轮询执行并回报状态。
+   * ------------------------------------------------------------------ */
+  const playerCommands = []
+  let playerCommandSeq = 0
+  let playerState = null
+  let lastClientPoll = 0
+  const pushPlayerCommand = (command) => {
+    playerCommandSeq += 1
+    playerCommands.push({ seq: playerCommandSeq, at: Date.now(), ...command })
+    if (playerCommands.length > 80) playerCommands.splice(0, playerCommands.length - 80)
+    return playerCommandSeq
+  }
+  const readJsonBody = (req) =>
+    new Promise((resolve, reject) => {
+      let raw = ''
+      req.setEncoding('utf8')
+      req.on('data', (chunk) => {
+        raw += chunk
+        if (raw.length > 64 * 1024) {
+          req.destroy()
+          reject(new PluginError('请求体过大', 'INTERNAL'))
+        }
+      })
+      req.on('end', () => {
+        if (!raw) return resolve({})
+        try {
+          resolve(JSON.parse(raw))
+        } catch {
+          reject(new PluginError('JSON 解析失败', 'INTERNAL'))
+        }
+      })
+      req.on('error', (err) => reject(err))
+    })
+
   const json = (res, payload, statusCode = 200) => {
     const body = JSON.stringify(payload)
     res.statusCode = statusCode
@@ -1070,6 +1106,54 @@ export function apply(ctx) {
         }
       }),
 
+      /* ---- Agent 工具桥：客户端轮询命令 / 上报播放状态 ---- */
+      route('player/commands', (url, req, res) => {
+        lastClientPoll = Date.now()
+        let cursor = Math.max(0, Math.round(num(url.searchParams.get('cursor'), 0)))
+        // 丢弃 90s 前的过期命令（页面关着时排队的请求不应在很久后突然开播）
+        while (playerCommands.length && Date.now() - playerCommands[0].at > 90_000) playerCommands.shift()
+        const commands = playerCommands.filter((command) => command.seq > cursor)
+        if (!commands.length) cursor = playerCommandSeq
+        ok(res, { cursor: playerCommandSeq, commands })
+      }),
+
+      route('player/state', async (url, req, res) => {
+        if (req.method && req.method !== 'POST') {
+          fail(res, '请用 POST 上报状态', 'INTERNAL')
+          return
+        }
+        try {
+          const body = await readJsonBody(req)
+          if (body && typeof body === 'object') {
+            const station = body.station && typeof body.station === 'object' ? body.station : null
+            playerState = {
+              station: station
+                ? {
+                    id: str(station.id).slice(0, 120),
+                    name: str(station.name).slice(0, 160),
+                    frequency: str(station.frequency).slice(0, 40),
+                    country: str(station.country).slice(0, 80),
+                    countryCode: str(station.countryCode).slice(0, 8),
+                    codec: str(station.codec).slice(0, 24),
+                    bitrate: Math.max(0, Math.round(num(station.bitrate))),
+                    hls: !!station.hls,
+                  }
+                : null,
+              playing: !!body.playing,
+              loading: !!body.loading,
+              error: str(body.error).slice(0, 40),
+              volume: Math.max(0, Math.min(1, num(body.volume))),
+              muted: !!body.muted,
+              updatedAt: Date.now(),
+            }
+            lastClientPoll = Date.now()
+          }
+          ok(res, { received: true })
+        } catch (err) {
+          fail(res, err, 'INTERNAL')
+        }
+      }),
+
       route('icon', (url, req, res) => {
         const found = readIcon(url.searchParams.get('size'))
         if (!found) {
@@ -1099,4 +1183,361 @@ export function apply(ctx) {
       cache.clear()
     }
   }, 'global-radio: routes')
+
+  /* ------------------------------------------------------------------ *
+   * Agent 工具：radio_play / radio_player
+   * 用户说“播放上海的某个电台 / 来点音乐电台 / 随便来点电台 / 听 FM”时，
+   * 模型直接调用这里；Host 解析电台 -> 入队 -> 客户端轮询播放。
+   * ------------------------------------------------------------------ */
+  ctx.effect(() => {
+    const tools = ctx.get('tools')
+    const systemPrompt = ctx.get('systemPrompt')
+    if (!tools || typeof tools.register !== 'function') return undefined
+    const disposers = []
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+    const toolText = () => ({
+      schema: { type: 'string' },
+      render: (_args, value) => [{ type: 'text', text: String(value) }],
+    })
+
+    const GENRE_ALIASES = {
+      music: 'music', '音乐': 'music',
+      pop: 'pop', '流行': 'pop',
+      news: 'news', '新闻': 'news', '资讯': 'news',
+      talk: 'talk', '谈话': 'talk', '聊天': 'talk',
+      classical: 'classical', '古典': 'classical',
+      jazz: 'jazz', '爵士': 'jazz',
+      electronic: 'electronic', '电子': 'electronic', '电音': 'electronic',
+      rock: 'rock', '摇滚': 'rock',
+      sports: 'sports', '体育': 'sports',
+      culture: 'culture', '文化': 'culture',
+    }
+    const COUNTRY_ALIASES = {
+      '中国': 'CN', '大陆': 'CN', '国内': 'CN', cn: 'CN', china: 'CN',
+      '香港': 'HK', hk: 'HK', 'hong kong': 'HK',
+      '台湾': 'TW', tw: 'TW', taiwan: 'TW',
+      '美国': 'US', us: 'US', usa: 'US', 'america': 'US',
+      '英国': 'GB', gb: 'GB', uk: 'GB', 'britain': 'GB',
+      '法国': 'FR', fr: 'FR', france: 'FR',
+      '德国': 'DE', de: 'DE', germany: 'DE',
+      '日本': 'JP', jp: 'JP', japan: 'JP',
+      '韩国': 'KR', kr: 'KR', korea: 'KR',
+      '俄罗斯': 'RU', ru: 'RU', russia: 'RU',
+      '意大利': 'IT', it: 'IT', italy: 'IT',
+      '西班牙': 'ES', es: 'ES', spain: 'ES',
+      '加拿大': 'CA', ca: 'CA', canada: 'CA',
+      '澳大利亚': 'AU', au: 'AU', australia: 'AU',
+      '巴西': 'BR', br: 'BR', brazil: 'BR',
+      '印度': 'IN', in: 'IN', india: 'IN',
+    }
+    const GENERIC_WORDS = new Set([
+      '帮我', '请', '给我', '播放', '放', '听', '听听', '来', '来点', '来个', '随便', '随便来点', '某个', '一个', '一些',
+      '电台', '广播', '收音机', '网络电台', '网络广播', '频道', '台', '在线', '实时', '直播', '呀', '啊', '吧', '的', '了',
+      'fm', 'am', 'mhz', 'khz', 'radio', 'station',
+    ])
+    const CHINESE_GENERIC = [...GENERIC_WORDS].filter((word) => /[\u4e00-\u9fff]/.test(word))
+    const CHINESE_GENRES = Object.keys(GENRE_ALIASES).filter((word) => /[\u4e00-\u9fff]/.test(word))
+    const tokensOf = (text) => {
+      const parts = String(text || '')
+        .split(/[\s,，。.!！?？、:：/]+/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+      const out = []
+      for (const part of parts) {
+        const lower = part.toLowerCase()
+        if (GENERIC_WORDS.has(lower) || COUNTRY_ALIASES[lower] || GENRE_ALIASES[lower]) continue
+        // 中文长句（如“音乐电台”“上海的某个电台”）先剥掉类型/泛词，保留城市或台名片段
+        let rest = part
+        if (/[\u4e00-\u9fff]/.test(part)) {
+          for (const word of CHINESE_GENRES) rest = rest.split(word).join('')
+          for (const word of CHINESE_GENERIC) rest = rest.split(word).join('')
+        }
+        rest = rest.trim()
+        if (!rest) continue
+        if (/^\d{2,4}(?:\.\d{1,2})?$/.test(rest)) {
+          out.push(rest)
+          continue
+        }
+        if (rest.length >= 1) out.push(rest)
+      }
+      return out
+    }
+
+    const searchStations = async (params) => {
+      try {
+        const query = new URLSearchParams({
+          limit: '24',
+          order: 'clickcount',
+          reverse: 'true',
+          hidebroken: 'true',
+          ...params,
+        })
+        return mapList(await radio.search(query.toString()))
+      } catch {
+        return []
+      }
+    }
+
+    const stationHaystack = (station) =>
+      [station.name, station.frequency || '', station.country, station.countryCode, station.city, (station.tags || []).join(' ')]
+        .join(' ')
+        .toLowerCase()
+
+    const parseRadioRequest = (args) => {
+      const rawQuery = str(args.query).trim()
+      const lower = rawQuery.toLowerCase()
+      let genre = str(args.genre).trim().toLowerCase()
+      if (!genre) {
+        for (const alias of Object.keys(GENRE_ALIASES)) {
+          if (lower.includes(alias.toLowerCase())) {
+            genre = GENRE_ALIASES[alias]
+            break
+          }
+        }
+      } else {
+        genre = GENRE_ALIASES[genre] || genre
+      }
+      let country = str(args.country).trim()
+      if (!country) {
+        for (const alias of Object.keys(COUNTRY_ALIASES)) {
+          if (lower.includes(alias.toLowerCase())) {
+            country = COUNTRY_ALIASES[alias]
+            break
+          }
+        }
+      } else {
+        country = COUNTRY_ALIASES[country.toLowerCase()] || country.toUpperCase()
+      }
+      const freqMatch = rawQuery.match(/\b(?:fm|am)?\s*(\d{2,4}(?:\.\d{1,2})?)\s*(?:mhz|khz)?\b/i)
+      const frequency = freqMatch ? freqMatch[1] : ''
+      return {
+        rawQuery,
+        tokens: tokensOf(rawQuery).slice(0, 3),
+        genre,
+        country: country ? String(country).toUpperCase() : '',
+        frequency,
+        random:
+          !!args.random ||
+          /随便|随机|某个|一些|来点/.test(rawQuery) ||
+          (!rawQuery && !str(args.genre).trim() && !str(args.country).trim()),
+      }
+    }
+
+    const resolveRadio = async (args) => {
+      const parsed = parseRadioRequest(args || {})
+      const seen = new Set()
+      const candidates = []
+      const add = (list) => {
+        for (const station of list || []) {
+          if (!station || !station.url) continue
+          const key = station.id || station.url
+          if (seen.has(key)) continue
+          seen.add(key)
+          candidates.push(station)
+        }
+      }
+      add(seedStations)
+      let filtered = false
+      for (const token of parsed.tokens) {
+        filtered = true
+        add(await searchStations({ name: token }))
+      }
+      if (parsed.rawQuery) add(await searchStations({ name: parsed.rawQuery, limit: '10' }))
+      if (parsed.genre) {
+        filtered = true
+        add(await searchStations({ tag: parsed.genre }))
+      }
+      if (parsed.country) {
+        filtered = true
+        add(await searchStations({ countrycode: parsed.country }))
+      }
+      if (!filtered) add(await searchStations({ limit: '30' }))
+
+      const scored = candidates
+        .map((station) => {
+          const haystack = stationHaystack(station)
+          let score = 0
+          for (const token of parsed.tokens) {
+            if (haystack.includes(token.toLowerCase())) score += 10
+          }
+          if (parsed.frequency && (haystack.includes(parsed.frequency) || (station.frequency || '').includes(parsed.frequency))) score += 24
+          if (parsed.genre && (station.tags || []).includes(parsed.genre)) score += 8
+          if (parsed.country && station.countryCode === parsed.country) score += 6
+          score += Math.min(4, Math.log10((station.clicks || 0) + 10))
+          return { station, score }
+        })
+        .sort((left, right) => right.score - left.score)
+
+      if (!scored.length) return { empty: true, parsed }
+      if (parsed.tokens.length && scored[0].score < 10) return { empty: true, parsed }
+      const top = scored.slice(0, 12).map((item) => item.station)
+      const pool = parsed.random ? top.slice(0, Math.min(8, top.length)) : top.slice(0, 1)
+      const picked = pool[Math.floor(Math.random() * pool.length)]
+      const queue = [picked, ...top.filter((station) => station.id !== picked.id)]
+      return { station: picked, queue, parsed }
+    }
+
+    const formatStation = (station) => {
+      if (!station) return '未知电台'
+      const frequency = station.frequency || (station.bitrate > 0 ? `${station.codec || '在线'} ${station.bitrate} kbps` : '在线电台')
+      const country = station.country || station.countryCode || ''
+      return `${station.name}（${frequency}${country ? ' · ' + country : ''}）`
+    }
+
+    const pushPlay = (resolved) => {
+      pushPlayerCommand({ type: 'play', station: resolved.station, queue: resolved.queue })
+    }
+
+    disposers.push(
+      tools.register({
+        name: 'radio_play',
+        description:
+          '在 DeepSeek Harness 的「全球电台」插件里播放电台 / 广播 / FM / AM / 网络电台。当用户说“播放上海的某个电台”“来点音乐电台”“随便放个电台”“听 FM 97.4”“放 BBC”这类话时使用本工具；不要用网易云音乐工具（netease_play）处理电台请求，那些只用于歌曲/歌单/专辑。支持 query（城市/台名/频率/关键词）、genre（news/music/classical/jazz/electronic/rock/talk）、country（中国/美国/日本…）、random（随便来点）。播放后面板底部出现大播放条，回到对话后收进左侧栏迷你播放器。',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: '电台关键词：城市、台名、频率或任意关键词，例如“上海”“上海动感101”“北京 FM97.4”“BBC World Service”。' },
+            genre: { type: 'string', description: '类型：music 音乐 / news 新闻 / talk 谈话 / classical 古典 / jazz 爵士 / electronic 电子 / rock 摇滚 / sports 体育 / culture 文化（也接受中文）。' },
+            country: { type: 'string', description: '国家/地区：CN 中国、HK 香港、TW 台湾、US 美国、GB 英国、JP 日本、KR 韩国、FR 法国、DE 德国 等（也接受中文）。' },
+            random: { type: 'boolean', description: 'true = 从匹配到的电台里随机挑一个（“随便来点电台”时使用）。' },
+          },
+          additionalProperties: false,
+        },
+        output: toolText(),
+        timeoutMs: 30_000,
+        async execute(args) {
+          const request = args && typeof args === 'object' ? args : {}
+          let resolved
+          try {
+            resolved = await resolveRadio(request)
+          } catch (err) {
+            return '电台解析失败：' + String(err && err.message ? err.message : err)
+          }
+          if (!resolved.station) {
+            const label = request.query || request.genre || request.country || '这个条件'
+            return `没有找到「${label}」可播放的电台。可以换个城市/台名/类型试试，或直接说“随便来点电台”。`
+          }
+          pushPlay(resolved)
+          await sleep(900)
+          const confirmed = playerState && playerState.station && playerState.station.id === resolved.station.id
+          if (confirmed && playerState.playing) {
+            return `正在播放：${formatStation(resolved.station)}。已交给「全球电台」插件，回到对话也不会中断；左侧栏会出现迷你播放器，同一时间只会有一个播放器发声。`
+          }
+          if (Date.now() - lastClientPoll > 15_000) {
+            return `已把播放请求发给「全球电台」：${formatStation(resolved.station)}；但当前似乎没有打开的 Harness 页面在响应，打开或刷新页面后会在电台面板开始播放。`
+          }
+          return `已让「全球电台」开始播放：${formatStation(resolved.station)}。播放器会在面板内显示底部大播放条，回到对话后收进左侧栏迷你播放器。`
+        },
+      }),
+    )
+
+    disposers.push(
+      tools.register({
+        name: 'radio_player',
+        description:
+          '控制 DeepSeek Harness「全球电台」播放器的状态：status 查看当前电台、pause 暂停、resume 继续、next 下一台、prev 上一台、volume 调音量、search 只搜索不播放、random 随机播放。用户提到电台/广播/FM/AM 时使用本工具；歌曲/歌单/专辑请用网易云音乐工具。',
+        parameters: {
+          type: 'object',
+          properties: {
+            action: { type: 'string', enum: ['status', 'pause', 'resume', 'next', 'prev', 'volume', 'search', 'random'], description: '要执行的操作。' },
+            volume: { type: 'number', description: 'action=volume 时的音量 0-1。' },
+            query: { type: 'string', description: 'action=search 时的搜索词（台名/城市/关键词）。' },
+            genre: { type: 'string', description: 'action=search 时的类型过滤。' },
+            country: { type: 'string', description: 'action=search 时的国家过滤。' },
+          },
+          required: ['action'],
+          additionalProperties: false,
+        },
+        output: toolText(),
+        timeoutMs: 30_000,
+        async execute(args) {
+          const request = args && typeof args === 'object' ? args : {}
+          const action = String(request.action || 'status')
+          const state = playerState
+          switch (action) {
+            case 'status': {
+              if (!state || !state.station) return '当前没有正在播放的电台。可以用 radio_play 说一句“播放上海的某个电台”或“随便来点电台”。'
+              const station = state.station
+              const progress = state.playing ? '正在播放' : state.loading ? '连接中' : '已暂停'
+              return `${formatStation(station)} · ${progress}${state.error ? '（错误：' + state.error + '）' : ''}；音量 ${Math.round((state.volume || 0) * 100)}%${state.muted ? '（静音）' : ''}。`
+            }
+            case 'pause':
+              pushPlayerCommand({ type: 'control', action: 'pause' })
+              return '已暂停电台。'
+            case 'resume':
+              pushPlayerCommand({ type: 'control', action: 'resume' })
+              return '已继续播放。'
+            case 'next':
+              pushPlayerCommand({ type: 'control', action: 'next' })
+              return '已切到下一台。'
+            case 'prev':
+              pushPlayerCommand({ type: 'control', action: 'prev' })
+              return '已切到上一台。'
+            case 'volume': {
+              const volume = Math.min(1, Math.max(0, Number(request.volume) || 0))
+              pushPlayerCommand({ type: 'control', action: 'volume', volume })
+              return `电台音量已设为 ${Math.round(volume * 100)}%。`
+            }
+            case 'random': {
+              let resolved
+              try {
+                resolved = await resolveRadio({ random: true })
+              } catch (err) {
+                return '随机播放失败：' + String(err && err.message ? err.message : err)
+              }
+              if (!resolved.station) return '暂时没有找到可播放的电台。'
+              pushPlay(resolved)
+              return `已随机播放：${formatStation(resolved.station)}。`
+            }
+            case 'search': {
+              const parsed = parseRadioRequest(request)
+              const seen = new Set()
+              const found = []
+              const take = (list) => {
+                for (const station of list || []) {
+                  if (!station || seen.has(station.id)) continue
+                  seen.add(station.id)
+                  found.push(station)
+                }
+              }
+              if (parsed.rawQuery) take(await searchStations({ name: parsed.rawQuery, limit: '12' }))
+              if (parsed.genre) take(await searchStations({ tag: parsed.genre, limit: '12' }))
+              if (parsed.country) take(await searchStations({ countrycode: parsed.country, limit: '12' }))
+              if (!found.length) take(seedStations.slice(0, 12))
+              const lines = found.slice(0, 10).map((station, index) => `${index + 1}. ${formatStation(station)}`)
+              return `找到 ${Math.min(found.length, 10)} 个电台（只搜索，未播放）：\n` + lines.join('\n') + '\n想听哪个就说“播放第 N 个 / 播放 <台名>”。'
+            }
+            default:
+              return '未知操作：' + action
+          }
+        },
+      }),
+    )
+
+    if (systemPrompt && typeof systemPrompt.section === 'function') {
+      disposers.push(
+        systemPrompt.section({
+          name: 'global-radio-plugin',
+          order: 8800,
+          text: [
+            '## 电台播放（全球电台插件）',
+            '当用户提到「电台 / 广播 / FM / AM / 收音机 / 网络电台 / 收听某个频率 / 随便来点电台」时，必须使用「全球电台」插件工具：`radio_play` 播放，`radio_player` 查看状态/暂停/继续/切歌/音量/搜索/随机。',
+            '不要用网易云音乐工具（netease_play / netease_player）处理电台、广播、FM、收音机请求——那些只用于歌曲、歌手、歌单、专辑。反过来，用户要听歌/歌曲/歌单时才用网易云工具。',
+            '示例：用户说“播放上海的某个电台”→ radio_play({ query: "上海" })；说“来点新闻电台”→ radio_play({ genre: "news" })；说“随便来点电台”→ radio_play({ random: true })；说“听 FM 97.4”→ radio_play({ query: "FM 97.4" })；说“放 BBC”→ radio_play({ query: "BBC" })。',
+            '播放不会打断对话：电台在插件播放器里播放，面板内有底部大播放条，回到对话后收进左侧栏迷你播放器；与网易云音乐互斥，同一时间只一个音频在发声。',
+          ].join('\n'),
+        }),
+      )
+    }
+
+    return () => {
+      disposers.forEach((dispose) => {
+        try {
+          dispose()
+        } catch (err) {
+          log('工具释放失败', String(err?.message ?? err))
+        }
+      })
+    }
+  }, 'global-radio: agent tools')
 }
