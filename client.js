@@ -51,6 +51,14 @@ window.__ModuleLoader__.load({
       'genre.uk.sub': 'BBC 与英伦摇滚',
       'genre.france': '法国电台',
       'genre.france.sub': '香颂与古典',
+      'section.cities': '城市电台',
+      'section.citiesHint': '点城市，查看当地广播与地方台',
+      'city.collectionHint': '当地广播与网络地方台',
+      'city.beijing': '北京', 'city.shanghai': '上海', 'city.guangzhou': '广州', 'city.shenzhen': '深圳',
+      'city.chengdu': '成都', 'city.wuhan': '武汉', 'city.hangzhou': '杭州', 'city.nanjing': '南京',
+      'city.tianjin': '天津', 'city.chongqing': '重庆', 'city.xian': '西安', 'city.changsha': '长沙',
+      'city.zhengzhou': '郑州', 'city.suzhou': '苏州', 'city.xiamen': '厦门', 'city.hongkong': '香港',
+      'city.taipei': '台北', 'city.macau': '澳门', 'city.qingdao': '青岛', 'city.kunming': '昆明',
       'banner.pick': '为你精选',
       'banner.shuffle': '换一批',
       'banner.hint': '从精选里随机挑选 3 个',
@@ -195,6 +203,14 @@ window.__ModuleLoader__.load({
       'genre.uk.sub': 'BBC & Britrock',
       'genre.france': 'France',
       'genre.france.sub': 'Chanson & classics',
+      'section.cities': 'City stations',
+      'section.citiesHint': 'Pick a city to browse its local radio',
+      'city.collectionHint': 'Local broadcast and online city stations',
+      'city.beijing': 'Beijing', 'city.shanghai': 'Shanghai', 'city.guangzhou': 'Guangzhou', 'city.shenzhen': 'Shenzhen',
+      'city.chengdu': 'Chengdu', 'city.wuhan': 'Wuhan', 'city.hangzhou': 'Hangzhou', 'city.nanjing': 'Nanjing',
+      'city.tianjin': 'Tianjin', 'city.chongqing': 'Chongqing', 'city.xian': "Xi'an", 'city.changsha': 'Changsha',
+      'city.zhengzhou': 'Zhengzhou', 'city.suzhou': 'Suzhou', 'city.xiamen': 'Xiamen', 'city.hongkong': 'Hong Kong',
+      'city.taipei': 'Taipei', 'city.macau': 'Macau', 'city.qingdao': 'Qingdao', 'city.kunming': 'Kunming',
       'banner.pick': 'Featured',
       'banner.shuffle': 'Shuffle',
       'banner.hint': 'Three random picks from the editor’s list',
@@ -1271,6 +1287,10 @@ window.__ModuleLoader__.load({
         ['path', { d: 'M12 3.6v2.2M12 18.2v2.2M3.6 12h2.2M18.2 12h2.2M6.1 6.1l1.6 1.6M16.3 16.3l1.6 1.6M17.9 6.1l-1.6 1.6M7.7 16.3l-1.6 1.6' }],
       ],
       chevron: [['path', { d: 'm9 6 6 6-6 6' }]],
+      pin: [
+        ['path', { d: 'M12 21s6-5.6 6-10.2A6 6 0 0 0 6 10.8C6 15.4 12 21 12 21z' }],
+        ['circle', { cx: '12', cy: '10.8', r: '2.2' }],
+      ],
     }
 
     function Icon(props) {
@@ -2850,6 +2870,76 @@ window.__ModuleLoader__.load({
       { id: 'france', kind: 'country', country: 'FR', icon: 'globe' },
     ]
 
+    const CITY_TILES = [
+      { id: 'beijing', query: '北京' },
+      { id: 'shanghai', query: '上海' },
+      { id: 'guangzhou', query: '广州' },
+      { id: 'shenzhen', query: '深圳' },
+      { id: 'chengdu', query: '成都' },
+      { id: 'wuhan', query: '武汉' },
+      { id: 'hangzhou', query: '杭州' },
+      { id: 'nanjing', query: '南京' },
+      { id: 'tianjin', query: '天津' },
+      { id: 'chongqing', query: '重庆' },
+      { id: 'xian', query: '西安' },
+      { id: 'changsha', query: '长沙' },
+      { id: 'zhengzhou', query: '郑州' },
+      { id: 'suzhou', query: '苏州' },
+      { id: 'xiamen', query: '厦门' },
+      { id: 'hongkong', query: '香港' },
+      { id: 'taipei', query: '台北' },
+      { id: 'macau', query: '澳门' },
+      { id: 'qingdao', query: '青岛' },
+      { id: 'kunming', query: '昆明' },
+    ]
+
+    function cityCollectionDef(city, t) {
+      const name = t('city.' + city.id)
+      return {
+        key: 'city:' + city.id,
+        kind: 'search',
+        q: city.query,
+        title: name + ' · ' + t('section.cities'),
+        hint: t('city.collectionHint'),
+        items: [],
+      }
+    }
+
+    function CityGrid(props) {
+      const t = props.t
+      return h(
+        'section',
+        { className: 'gr-cities', 'data-gr': 'cities' },
+        h(
+          'div',
+          { className: 'gr-block-head' },
+          h('h3', null, t('section.cities')),
+          h('span', { className: 'gr-block-hint' }, t('section.citiesHint')),
+        ),
+        h(
+          'div',
+          { className: 'gr-city-grid' },
+          CITY_TILES.map((city) =>
+            h(
+              'button',
+              {
+                key: city.id,
+                type: 'button',
+                className: 'gr-city',
+                'data-gr': 'city',
+                'data-city': city.query,
+                onClick: () => props.onOpen(cityCollectionDef(city, t)),
+                title: t('city.' + city.id) + ' · ' + t('section.citiesHint'),
+              },
+              h('span', { className: 'gr-city-icon' }, h(Icon, { name: 'pin', size: 14 })),
+              h('span', { className: 'gr-city-name' }, t('city.' + city.id)),
+              h(Icon, { name: 'chevron', size: 12, className: 'gr-city-chevron' }),
+            ),
+          ),
+        ),
+      )
+    }
+
     function BannerCard(props) {
       const t = props.t
       const station = props.station
@@ -3124,6 +3214,7 @@ window.__ModuleLoader__.load({
         'div',
         { className: 'gr-discover' },
         h(BannerGrid, { t, s }),
+        h(CityGrid, { t, onOpen: (def) => props.onOpenCollection(def) }),
         h(GenreGrid, { t, busyId: props.busyGenre, onPick: props.onGenre, onMore: (tile) => props.onOpenCollection(genreCollectionDef(tile, t)) }),
         s.recent.length
           ? h(RowSection, { id: 'recent', title: t('section.recent'), hint: '', items: availableStations(s.recent).slice(0, 12), t, s, onMore: () => props.onOpenCollection(rowCollectionDef(s, 'recent', t)) })
@@ -4110,6 +4201,20 @@ window.__ModuleLoader__.load({
     .gr-back-btn:hover{background:var(--gr-fill2);color:var(--gr-t1)}
     .gr-load-more-wrap{display:flex;justify-content:center;padding:24px 0 8px}
     .gr-load-more-wrap .gr-btn{min-width:140px}
+    .gr-cities{margin:6px 0 10px}
+    .gr-city-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+    .gr-city{
+      display:flex;align-items:center;gap:6px;min-width:0;height:42px;padding:0 9px 0 10px;
+      border-radius:12px;border:1px solid var(--gr-line2);background:color-mix(in srgb,var(--gr-l1) 38%,transparent);
+      color:var(--gr-t1);cursor:pointer;text-align:left;font-size:11.5px;font-weight:650;
+      transition:background 150ms ease,border-color 150ms ease,transform 150ms ease,box-shadow 150ms ease;
+    }
+    .gr-city:hover{background:color-mix(in srgb,var(--gr-l2) 78%,transparent);border-color:var(--gr-accent-line);transform:translateY(-1px);box-shadow:var(--gr-shadow-1)}
+    .gr-city-icon{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;flex:none;color:var(--gr-accent);background:var(--gr-accent-soft)}
+    .gr-city-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .gr-city-chevron{color:var(--gr-t3);flex:none;opacity:.75}
+    .gr-city:hover .gr-city-chevron{color:var(--gr-accent);opacity:1}
+
     /* ---------------------- 面板底部大播放条 ---------------------- */
     .gr-playerbar-shell{flex:none;width:100%;max-width:1440px;margin:0 auto;padding:10px 30px 16px}
     .gr-playerbar{

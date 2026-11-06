@@ -246,6 +246,7 @@ ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
   - 发现页（上方内容，可滚动）：
     - `[data-gr="banners"]`：3 张精选大 banner（第一张跨两行），`[data-gr="banner"]` 展示台标、台名、频率、国家/tags；点击播放该台。初始 3 个按日期每日轮换。
       右侧「换一批」按钮 `[data-gr="banner-shuffle"]` 从精选池随机换 3 个台（初始为精选前 3），不固定。
+    - `[data-gr="cities"]`：20 个主要中文城市入口 `[data-gr="city"][data-city]`（北京/上海/广州/深圳/成都/武汉/杭州/南京/天津/重庆/西安/长沙/郑州/苏州/厦门/香港/台北/澳门/青岛/昆明）；点击进入该城市的集合页（`kind="search"`, `q=城市名`），展示当地广播与地方台。
     - `[data-gr="genres"]`：12 个中等分类卡 `[data-gr="genre"][data-genre]`（新闻/世界之声/古典/爵士/电子/摇滚/谈话/华语/日本/韩国/英国/法国）。**点一下从该分类随机挑一台播放**并 toast 提示。
     - 自适应网格列表 `[data-gr="row"][data-row=popular|china|seed|recent|favorites]`（随窗口宽度 6/5/4/3/2 列换行，不横向裁切、不需要拖动），卡片 `[data-gr="station"]`（logo/台名/频率）。
     - 板块标题 `[data-gr="row-more"][data-row]` 点击进入集合页；分类卡右侧 `[data-gr="genre-more"][data-genre]` 进入对应集合页。集合页 `[data-gr="collection"]` 用 `[data-gr="station"]` 网格展示全部频道，`[data-gr="load-more"]` 分页加载（36 条/页），`[data-gr="back"]` 返回。
@@ -327,7 +328,7 @@ Host 注册两个 Agent 工具（`ctx.get('tools').register`），并注入 syst
   `data-gr="favorite"`、`data-gr="open-player"`、`data-gr="fullscreen"`、`data-gr="back"`、
   `data-gr="mini-player"`、`data-gr="mini-toggle"`、`data-gr="mini-prev"`、`data-gr="mini-next"`、
   `data-gr="nav"`、`data-gr="country"`、`data-gr="tag"`、`data-gr="toast"`、`data-gr="player-station"`、
-  `data-gr="banners"`、`data-gr="banner"`、`data-gr="banner-shuffle"`、`data-gr="genres"`、`data-gr="genre"`（带 `data-genre`）、`data-gr="genre-more"`、`data-gr="row-more"`、`data-gr="collection"`、`data-gr="load-more"`、
+  `data-gr="banners"`、`data-gr="banner"`、`data-gr="banner-shuffle"`、`data-gr="cities"`、`data-gr="city"`（带 `data-city`）、`data-gr="genres"`、`data-gr="genre"`（带 `data-genre`）、`data-gr="genre-more"`、`data-gr="row-more"`、`data-gr="collection"`、`data-gr="load-more"`、
   `data-gr="row"`（带 `data-row`）、`data-gr="playerbar"`、`data-gr="expand"`。
   （旧版 `data-gr="dock"` 已移除，底部控件统一为 `playerbar`。）
 - 播放状态：根节点 `data-playing="true|false"`；迷你条同样带 `data-playing`。
