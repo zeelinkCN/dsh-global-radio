@@ -1,5 +1,13 @@
 # 全球电台 · Global Radio · DeepSeek Harness 插件
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/zeelinkCN/dsh-global-radio?display_name=tag)](https://github.com/zeelinkCN/dsh-global-radio/releases)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-blue)](#macos--windows)
+[![DeepSeek Harness](https://img.shields.io/badge/DeepSeek%20Harness-plugin-4c6ef5)](https://github.com/zeelinkCN/dsh-global-radio)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/zeelinkCN/dsh-global-radio/pulls)
+
+> 一个 DeepSeek Harness（DSH）插件：在 Harness 里收听全球实时电台——发现页、FM/AM 频率、全屏频谱可视化、底部大播放条、侧栏迷你条，支持 HLS、备用信号源与 Agent 对话点播。**MIT License，macOS / Windows 通用。**
+
 在 DeepSeek Harness 里直接收听全球实时电台。左侧栏入口 → 网易云风格的发现页（大 banner + 分类卡 + 横滑列表），
 点分类卡会**随机挑一台该类型的电台**开始播放；**也可以在对话框直接说「播放上海的某个电台」「随便来点电台」「来点新闻电台」「听 FM 97.4」，Agent 会调用插件工具直接开播**；底部常驻大播放条随时控制；进入播放页看**物理频率（FM / AM）**、
 台标与实时频谱；回到对话继续工作时播放器收进左侧栏，与网易云音乐的迷你条**上下堆叠**，同一时刻只有一条音频在发声。
@@ -194,8 +202,16 @@ Host 侧无需配置。
 - 电台与网易云音量各自记忆；切换播放不互改音量。
 - 迷你条位置由 Harness 的 `sidebar.footer.action` 决定；宿主改版时可能随之变化（已用 `:has()` 适配当前版本）。
 
-## 许可
+## License / 许可
 
-- 插件代码 MIT（见 `LICENSE`）。
-- 内置 `vendor/hls.light.min.js` 为 [hls.js](https://github.com/video-dev/hls.js) Apache-2.0，许可证见 `vendor/LICENSE-hls.js`。
+- **插件代码：MIT** — 见 [LICENSE](LICENSE)。可自由使用、修改、分发、商用，保留版权声明即可。
+- 内置 `vendor/hls.light.min.js` 为 [hls.js](https://github.com/video-dev/hls.js) **Apache-2.0**，许可证见 [vendor/LICENSE-hls.js](vendor/LICENSE-hls.js)。
+- 电台元数据来源 [Radio Browser](https://www.radio-browser.info/)（社区数据，免费使用）；台标/音频版权归各电台所有。
 - 图标为原创（浅橙圆角底 + 页面内同款小收音机线条）。
+
+## 开发者 / 寻找本仓库
+
+- GitHub Topics：`deepseek-harness`、`dsh-plugin`、`dsh`、`global-radio`、`internet-radio`、`radio`、`radio-browser`、`hls`、`web-audio`、`chinese-radio`、`macos`、`windows`
+- 插件契约：[docs/CONTRACT.md](docs/CONTRACT.md)；Host 路由、Client slots、Agent 工具、测试钩子都在这里
+- 验收工程：`selftest/`（真实 headless Chrome + 真实 client.js + mock Host，138 项断言）
+- 版本标签：`v1.0.0` → `v1.1.0`（Agent 对话点播）→ `v1.2.0`（城市地方台 / 集合页 / 每日精选）→ `v1.2.1`（播放页跟随 DSH 主题）

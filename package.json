@@ -43,11 +43,20 @@
   "license": "MIT",
   "keywords": [
     "deepseek-harness",
+    "deepseek",
     "dsh-plugin",
-    "radio",
+    "dsh",
     "global-radio",
-    "streaming",
-    "player"
+    "internet-radio",
+    "radio",
+    "radio-browser",
+    "hls",
+    "web-audio",
+    "player",
+    "plugin",
+    "chinese-radio",
+    "macos",
+    "windows"
   ],
   "repository": {
     "type": "git",
