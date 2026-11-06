@@ -1,6 +1,6 @@
 {
   "name": "@local/global-radio",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "type": "module",
   "description": "Global Radio (全球电台) — a DeepSeek Harness plugin: browse and listen to live radio worldwide with FM/AM frequency display, an immersive now-playing page with a live audio visualizer, an in-panel dock, and a sidebar mini player stacked with other players; only one player sounds at a time.",

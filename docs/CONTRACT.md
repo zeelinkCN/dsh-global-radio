@@ -257,7 +257,7 @@ ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
     - 无当前电台时不渲染。
   - 搜索结果：搜索激活时用 `[data-gr="station"]` 网格替换发现页；空态 `[data-gr="empty"]`、错误态 `[data-gr="error"]`（带重试）。
 - `player` 视图（「全屏播放」，点 banner 播放按钮/底部播放条台标进入）：
-  - 全屏沉浸：根节点 `[data-gr="player-view"]`，模糊台标背景 + 深色渐变（跟随主题，但播放页允许深色）。
+  - 全屏沉浸：根节点 `[data-gr="player-view"]`，模糊台标背景；**跟随 DSH 主题**：浅色主题下浅色磨砂 + 深色文字，深色主题下深色沉浸（`body[data-ds-dark-theme]` 覆盖 CSS 变量），主题切换即时生效。
   - 大封面/圆形台标（可缓慢旋转，`prefers-reduced-motion` 时停）。
   - 台名 + **频率**（大字）+ 国家 · codec · bitrate + tags。
   - 可视化 `[data-gr="visualizer"]`：`<canvas>`，用 Web Audio `AnalyserNode` 绘制实时频谱；**必须**在音频同源（走 /stream 或 /hls 代理）时可用；分析器不可用时自动退化为 CSS/JS 伪动画，不报错。

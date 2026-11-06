@@ -20,8 +20,10 @@
 | 发现页：3 张大 banner + 12 个分类卡 + 自适应网格列表 | 深色主题 |
 | ![分类随机播放](docs/screenshot-genre-playing.png) | ![底部大播放条](docs/screenshot-playerbar.png) |
 | 点分类卡随机挑一台播放，提示「随机播放：xxx」 | 底部常驻大播放条（控制居中对称） |
-| ![播放页](docs/screenshot-player.png) | ![HLS 电台](docs/screenshot-hls.png) |
-| 全屏播放页：台标 / FM 频率大字 / 频谱可视化 | HLS 电台播放 + 实时频谱 |
+| ![播放页（浅色主题）](docs/screenshot-player.png) | ![播放页（深色主题）](docs/screenshot-player-dark.png) |
+| 全屏播放页：跟随浅色主题（台标 / FM 频率 / 可视化） | 全屏播放页：深色主题 |
+| ![HLS 电台](docs/screenshot-hls.png) | ![Banner 播放](docs/screenshot-banner-playing.png) |
+| HLS 电台播放 + 实时频谱 | 点 banner 直接播放 |
 | ![城市电台](docs/screenshot-cities.png) | ![集合页（北京）](docs/screenshot-collection-city.png) |
 | 城市电台：20 个主要城市入口 | 点城市进入当地地方台集合页 |
 | ![集合页（华语电台）](docs/screenshot-collection.png) | ![集合页（爵士）](docs/screenshot-collection-jazz.png) |
@@ -48,7 +50,8 @@
 - **底部大播放条**（browse 视图常驻）：台标 + 台名 + 频率 + tags；中间 上一台/播放暂停/下一台 **居中对称**；右侧收藏、音量、展开播放页。占面板自己的布局行，不悬浮、不遮挡内容。
 
 ### 全屏播放页
-- 沉浸式模糊台标背景 + 圆形旋转台标；**频率大字**（`FM`/`AM` + 数值 + `MHz`/`kHz`）；国家 · codec · bitrate · tags。
+- **跟随 DSH 主题**：浅色主题下是浅色磨砂播放页（深色文字、浅色控制条），深色主题下是深色沉浸播放页；切换主题即时生效（`body[data-ds-dark-theme]`）。
+- 模糊台标背景 + 圆形旋转台标；**频率大字**（`FM`/`AM` + 数值 + `MHz`/`kHz`）；国家 · codec · bitrate · tags。
 - **实时可视化**：Web Audio `AnalyserNode` + canvas，三种模式可切换并 localStorage 记住：频谱柱 / 波形 / 环形。
 - 底部玻璃控制条：收藏 + 上一台/播放暂停/下一台（居中）+ 音量；右上角浏览器全屏；Esc 返回不中断播放。
 
